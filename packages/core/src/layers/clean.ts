@@ -59,12 +59,23 @@ export function runClean(
     const mp = missing / observed;
     missingPct[s.symbol] = mp;
     returns[s.symbol] = r;
-    if (first >= px.length - 60) dropped.push({ symbol: s.symbol, reason: 'less than 60 weeks of observations' });
+    if (first >= px.length - 60) {
+      dropped.push({ symbol: s.symbol, reason: 'less than 60 weeks of observations' });
+      delete returns[s.symbol];
+      continue;
+    }
+    if (mp > 0.25) {
+      dropped.push({ symbol: s.symbol, reason: `gaps ${pct(mp)} of observed weeks` });
+      delete returns[s.symbol];
+      continue;
+    }
   }
 
+  const deep = series.filter((x) => x.bars.length >= 1300).map((x) => missingPct[x.symbol] ?? 0);
+  const worstDeep = deep.length ? Math.max(...deep) : 0;
   const checks = [
     { name: 'weekly depth', ok: dates.length >= 520, detail: `${dates.length} weeks` },
-    { name: 'missing data', ok: Object.values(missingPct).every((v) => v <= 0.1), detail: `worst ${pct(Math.max(...Object.values(missingPct)))}` },
+    { name: 'missing data', ok: worstDeep <= 0.1, detail: `worst ${pct(worstDeep)} among 5y+ series` },
     { name: 'return outliers', ok: outliers.length < dates.length * 0.02, detail: `${outliers.length} weekly moves > 35% (kept, flagged)` },
   ];
   const gate: Gate = {

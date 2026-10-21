@@ -50,16 +50,19 @@ The UI replays the recorded event log. It does not call market data at runtime, 
 
 ## Data
 
-- Public daily bars via Yahoo Finance (cookie + crumb session, curl transport).
-- Optional: `RH_MCP_TOKEN` enables the Robinhood MCP read-only historical adapter (split-adjusted prices + current distribution yield accrued as total return).
-- When only split-adjusted prices exist, total return is approximated by accruing the current distribution yield. This is labelled in each series' provenance.
-- Raw data stays under `data/raw/` and `data/.cache/` and is git-ignored. Only derived run artifacts are published.
-- Secrets live in GitHub Actions secrets; nothing sensitive is committed.
+- **Universe discovery**: Eastmoney US market list — every US-listed stock/ETF (~13.9k) with market cap, volume and turnover, plus every USD crypto pair on Binance.
+- **Candidates**: top 400 liquid US stocks by market cap, top 120 ETFs by turnover, top 30 crypto pairs by 24h volume.
+- **History**: Eastmoney backward-adjusted daily bars (≈ total return) for stocks/ETFs; Binance daily klines for crypto. 10y+ where available.
+- **Scope**: 13,906 discovered → 550 candidates → 440 fetched → 129 in the covariance pool in the current run.
+- **Options** are modelled synthetically from realised volatility; they are reported separately and never enter the HRP solve.
+- **Event contracts** have no public history reachable from this environment, so the sleeve is blocked with weight 0 (fail-closed, no fixture).
+- Raw data stays in `data/raw/` (git-ignored); only the derived run artifact is committed.
 
-## Demo
+## Refresh
 
-- `http://localhost:5173/?t=end` opens the completed run instead of replaying it.
-- The UI is a static artifact: `runs/latest.json` is the whole input.
+- Local: `pnpm refresh` (discover → fetch → pipeline → sync).
+- Scheduled: `launchd` runs it daily at 07:00 (`ops/com.brickerp.rhlayers.daily.plist`).
+- Cloud: GitHub Actions runs the same refresh daily at 06:00 UTC and deploys Pages; if a source is unreachable, the committed artifact is used.
 
 ## Commands
 

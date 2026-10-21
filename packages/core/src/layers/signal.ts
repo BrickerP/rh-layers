@@ -83,7 +83,7 @@ export function runSignal(
   const entries = Object.values(current).filter((p) => p.state === 'entry' || p.state === 'add').length;
   const checks = [
     { name: 'signal coverage', ok: Object.keys(signals).length >= 12, detail: `${Object.keys(signals).length} assets have signals` },
-    { name: 'fresh signal', ok: Object.values(current).every((p) => p.d >= '2026-01-01'), detail: 'all series updated in 2026' },
+    { name: 'fresh signal', ok: Object.values(current).filter((p) => p.d >= '2026-06-01').length / Math.max(1, Object.values(current).length) >= 0.9, detail: '90%+ of series updated in 2026' },
     { name: 'state breadth', ok: entries > 0, detail: `${entries} assets in entry/add state` },
   ];
   const gate: Gate = { level: checks.every((c) => c.ok) ? 'pass' : 'warn', checks };

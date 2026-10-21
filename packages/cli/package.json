@@ -6,7 +6,9 @@
   "scripts": {
     "data": "tsx src/fetch.ts",
     "pipeline": "tsx src/run.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "discover": "tsx src/discover.ts",
+    "fetch:broad": "tsx src/fetchBroad.ts"
   },
   "dependencies": {
     "@rh-layers/core": "workspace:*"

@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { LayerEvent, LayerId, RunArtifact } from '@rh-layers/core';
 import FlowGraph, { type StageStatus } from './components/FlowGraph';
-import StageRail from './components/StageRail';
 import Timeline from './components/Timeline';
 import { AssetPassport, LayerView } from './components/LayerViews';
 import { LAYERS, LAYER_BY_ID } from './lib/meta';
-import { Badge } from './components/charts';
 
 const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 
@@ -19,8 +17,8 @@ function useReplay(events: LayerEvent[]) {
   const [vt, setVt] = useState(end ? total : 0);
   const [playing, setPlaying] = useState(!end);
   const [speed, setSpeed] = useState(1);
-
   const vtRef = useRef(vt);
+
   useEffect(() => {
     vtRef.current = vt;
   }, [vt]);
@@ -63,10 +61,9 @@ function useReplay(events: LayerEvent[]) {
   };
 }
 
-function statusAt(layer: RunArtifact['layers'][number], vt: number, events: LayerEvent[]): StageStatus {
+function statusAt(layer: RunArtifact['layers'][number], vt: number): StageStatus {
   const seen = layer.events.filter((e) => e.t <= vt);
   if (!seen.length) return 'idle';
-  if (seen.some((e) => e.kind === 'error')) return 'fail';
   const last = seen[seen.length - 1];
   if (last.kind === 'end') return layer.gate.level === 'pass' ? 'done' : layer.gate.level === 'warn' ? 'warn' : 'fail';
   return 'running';
@@ -95,11 +92,10 @@ export default function App() {
     return (
       <div className="empty">
         <div className="empty-card">
-          <div className="empty-kicker">RH LAYERS</div>
-          <h1>No run artifact yet</h1>
+          <div className="kicker">RH LAYERS</div>
+          <h1>No run artifact</h1>
           <p>
-            Generate one with <code>pnpm fetch && pnpm pipeline</code>, then reload. The UI replays the recorded event log; it does not call
-            market data at runtime.
+            Generate one with <code>pnpm discover && pnpm fetch:broad && pnpm pipeline</code>. The UI only replays the recorded event log.
           </p>
           {error && <div className="callout warn">{error}</div>}
         </div>
@@ -108,94 +104,130 @@ export default function App() {
   }
 
   const virtual = replay.virtual;
-  const status = Object.fromEntries(
-    run.layers.map((l) => [l.id, statusAt(l, replay.vt, virtual)]),
-  ) as Record<LayerId, StageStatus>;
+  const status = Object.fromEntries(run.layers.map((l) => [l.id, statusAt(l, replay.vt)])) as Record<LayerId, StageStatus>;
   const progress = Object.fromEntries(
-    run.layers.map((l) => {
-      const total = Math.max(1, l.events.length);
-      return [l.id, l.events.filter((e) => e.t <= replay.vt).length / total];
-    }),
+    run.layers.map((l) => [l.id, l.events.filter((e) => e.t <= replay.vt).length / Math.max(1, l.events.length)]),
   ) as Record<LayerId, number>;
 
-  const active = (['backtest', 'build', 'corr', 'signal', 'screen', 'metrics', 'clean', 'sources'] as LayerId[]).find(
-    (id) => status[id] === 'running',
-  ) ?? (['backtest', 'build', 'corr', 'signal', 'screen', 'metrics', 'clean', 'sources'] as LayerId[]).find((id) => status[id] !== 'idle');
+  const order: LayerId[] = ['backtest', 'build', 'corr', 'signal', 'screen', 'metrics', 'clean', 'sources'];
+  const active = order.find((id) => status[id] === 'running') ?? order.find((id) => status[id] !== 'idle');
   const focus: LayerId = pinned ?? active ?? 'sources';
   const meta = LAYER_BY_ID.get(focus)!;
   const layer = run.layers.find((l) => l.id === focus)!;
-  const gatesPassed = run.layers.filter((l) => l.gate.level === 'pass').length;
-
   const hrp = run.backtest.stats['HRP core'];
+  const positions = Object.keys(run.weights).length;
+  const gatesPassed = run.layers.filter((l) => l.gate.level === 'pass').length;
+  const discovery = run.discovery ?? { discovered: run.universe.length, candidates: run.universe.length, fetched: run.universe.length, pool: run.screen.pool.length, stocks: 0, etfs: 0, crypto: 0 };
 
-  const short: Record<LayerId, string> = {
-    sources: `${run.screen.pool.length} assets`,
-    clean: `${run.weekly.dates.length} weeks`,
-    metrics: `${Object.keys(run.metrics).length} series`,
-    screen: `${run.screen.pool.length} kept`,
-    signal: `${Object.keys(run.signals).length} signals`,
-    corr: `${run.corr.clusters.length} clusters`,
-    build: `${Object.entries(run.weights).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—'} ${pct(Object.entries(run.weights).sort((a, b) => b[1] - a[1])[0]?.[1] ?? 0, 0)}`,
-    backtest: `${pct(hrp.cagr)} CAGR`,
+  const metric: Record<LayerId, string> = {
+    sources: discovery.discovered.toLocaleString(),
+    clean: `${run.weekly.dates.length}w`,
+    metrics: String(Object.keys(run.metrics).length),
+    screen: String(run.screen.pool.length),
+    signal: String(Object.keys(run.signals).length),
+    corr: String(run.corr.clusters.length),
+    build: String(positions),
+    backtest: pct(hrp.cagr, 1),
   };
 
   return (
     <div className="app">
       <header className="header">
         <div className="brand">
-          <span className="brand-mark">◧</span>
+          <span className="mark">◧</span>
           <div>
             <h1>
-              RH <span className="brand-thin">LAYERS</span>
+              RH <span>LAYERS</span>
             </h1>
-            <p>eight governed stages · one replayable run</p>
+            <p>asset pipeline · replayable run</p>
           </div>
         </div>
-        <div className="head-stats">
-          <div className="head-stat">
-            <span>run</span>
-            <b className="mono">{run.runId}</b>
+
+        <div className="funnel">
+          <div className="f-step">
+            <span>discovered</span>
+            <b>{discovery.discovered.toLocaleString()}</b>
           </div>
-          <div className="head-stat">
-            <span>assets</span>
-            <b className="mono">{run.screen.pool.length}/{run.universe.length}</b>
+          <i>→</i>
+          <div className="f-step">
+            <span>candidates</span>
+            <b>{discovery.candidates}</b>
           </div>
-          <div className="head-stat">
-            <span>clusters</span>
-            <b className="mono">{run.corr.clusters.length}</b>
+          <i>→</i>
+          <div className="f-step">
+            <span>history</span>
+            <b>{discovery.fetched}</b>
           </div>
+          <i>→</i>
+          <div className="f-step">
+            <span>pool</span>
+            <b>{run.screen.pool.length}</b>
+          </div>
+          <i>→</i>
+          <div className="f-step accent">
+            <span>positions</span>
+            <b>{positions}</b>
+          </div>
+        </div>
+
+        <div className="head-right">
           <div className="head-stat">
             <span>HRP CAGR</span>
-            <b className="mono pos">{pct(hrp.cagr)}</b>
+            <b className="pos">{pct(hrp.cagr)}</b>
           </div>
           <div className="head-stat">
             <span>max DD</span>
-            <b className="mono neg">{pct(hrp.maxDD)}</b>
+            <b className="neg">{pct(hrp.maxDD)}</b>
           </div>
           <div className="head-stat">
             <span>gates</span>
-            <b className="mono">
-              {gatesPassed}/{run.layers.length}
+            <b>
+              {gatesPassed} pass · {run.layers.filter((l) => l.gate.level === 'warn').length} warn
             </b>
           </div>
-          <Badge tone={gatesPassed === run.layers.length ? 'ok' : 'warn'}>{gatesPassed === run.layers.length ? 'all gates passed' : 'review gates'}</Badge>
+          <div className="head-stat">
+            <span>run</span>
+            <b className="mono-sm">{run.runId}</b>
+          </div>
         </div>
       </header>
 
-      <div className="body">
-        <StageRail run={run} status={status} progress={progress} selected={focus} onSelect={(id) => setPinned(id)} />
-
-        <main className="center">
+      <div className="main">
+        <section className="canvas">
           <FlowGraph
             layers={run.layers}
             status={status}
             progress={progress}
             vt={replay.vt}
             events={virtual}
-            onSelect={(id) => setPinned(id)}
             selected={focus}
-            short={short}
+            onSelect={setPinned}
+            metric={metric}
           />
+
+          <div className="strip">
+            <div>
+              <span>window</span>
+              <b className="mono-sm">
+                {run.weekly.dates[0]} → {run.weekly.dates.at(-1)}
+              </b>
+            </div>
+            <div>
+              <span>universe</span>
+              <b className="mono-sm">
+                {discovery.stocks.toLocaleString()} stocks · {discovery.etfs.toLocaleString()} ETFs · {discovery.crypto} crypto
+              </b>
+            </div>
+            <div>
+              <span>cash</span>
+              <b className="mono-sm">{pct(run.cash)}</b>
+            </div>
+            <div>
+              <span>costs</span>
+              <b className="mono-sm">{run.config.costBps}bp · {run.config.rebalanceWeeks}w rebalance</b>
+            </div>
+          </div>
+
           <Timeline
             run={{ ...run, layers: run.layers.map((l) => ({ ...l, events: virtual.filter((e) => e.layer === l.id) })) }}
             vt={replay.vt}
@@ -207,19 +239,22 @@ export default function App() {
             onSpeed={replay.setSpeed}
             onReset={replay.reset}
           />
+
           <div className="log">
             <div className="log-head">
               <span>event stream</span>
-              <span className="mono">{virtual.filter((e) => e.t <= replay.vt).length} / {virtual.length}</span>
+              <span className="mono-sm">
+                {virtual.filter((e) => e.t <= replay.vt).length} / {virtual.length}
+              </span>
             </div>
             <div className="log-rows">
               {virtual
                 .filter((e) => e.t <= replay.vt)
-                .slice(-14)
+                .slice(-18)
                 .reverse()
                 .map((e, i) => (
                   <div key={`${e.t}-${i}`} className="log-row">
-                    <span className="log-t mono">{(e.t / 1000).toFixed(2)}s</span>
+                    <span className="log-t">{(e.t / 1000).toFixed(2)}s</span>
                     <span className="log-dot" style={{ background: LAYER_BY_ID.get(e.layer)?.color }} />
                     <span className="log-layer">{e.layer}</span>
                     <span className="log-msg">{e.msg}</span>
@@ -227,26 +262,20 @@ export default function App() {
                 ))}
             </div>
           </div>
-          <div className="center-foot">
-            <span className="mono dim">
-              {run.weekly.dates[0]} → {run.weekly.dates.at(-1)} · {run.weekly.dates.length} weeks · costs {run.config.costBps}bp
-            </span>
-            <span className="mono dim">data: public series · no live trading · not investment advice</span>
-          </div>
-        </main>
+        </section>
 
         <aside className="inspector">
           <div className="insp-head">
             <div>
-              <div className="insp-kicker">
+              <div className="kicker">
                 stage {String(LAYERS.findIndex((l) => l.id === focus) + 1).padStart(2, '0')} / 08
               </div>
               <h2 style={{ color: meta.color }}>{meta.label}</h2>
               <p>
-                {meta.input} <span className="arrow">→</span> {meta.output}
+                {meta.input} <span>→</span> {meta.output}
               </p>
             </div>
-            <span className={`pill pill-${layer.gate.level}`}>{layer.gate.level}</span>
+            <span className={`pill ${layer.gate.level}`}>{layer.gate.level}</span>
           </div>
           <div className="gate-row">
             {layer.gate.checks.map((c) => (

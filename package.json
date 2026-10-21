@@ -7,7 +7,10 @@
     "pipeline": "pnpm --filter @rh-layers/cli pipeline",
     "dev": "pnpm --filter @rh-layers/web dev",
     "build": "pnpm -r typecheck && pnpm --filter @rh-layers/web build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "discover": "pnpm --filter @rh-layers/cli discover",
+    "fetch:broad": "pnpm --filter @rh-layers/cli fetch:broad",
+    "refresh": "(pnpm discover || true) && (pnpm fetch:broad || true) && pnpm pipeline && pnpm --filter @rh-layers/web sync"
   },
   "devDependencies": {
     "typescript": "^5.9.2"

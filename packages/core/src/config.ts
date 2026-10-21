@@ -2,7 +2,7 @@ import type { RunConfig } from './types';
 
 export const DEFAULT_CONFIG: Omit<RunConfig, 'runId'> = {
   windowWeeks: 260,
-  rebalanceWeeks: 13,
+  rebalanceWeeks: 26,
   costBps: 10,
   maxAssetWeight: 0.2,
   maxClusterWeight: 0.65,
@@ -16,6 +16,8 @@ export const DEFAULT_CONFIG: Omit<RunConfig, 'runId'> = {
     Crypto: 0.08,
   },
   minHistoryWeeks: 260,
+  maxPoolSize: 150,
+  classQuotas: { Equity: 100, 'Fixed Income': 22, Commodity: 10, 'Real Estate': 6, 'Real Assets': 6, Crypto: 10 },
   cashMin: 0,
   smaWindow: 200,
   momLookback: 252,

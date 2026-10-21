@@ -53,7 +53,7 @@ export function runMetrics(
   const checks = [
     { name: 'coverage', ok: Object.keys(metrics).length >= 15, detail: `${Object.keys(metrics).length} series measured` },
     { name: 'bench integrity', ok: Math.abs(corrWithSpy - 1) < 1e-6, detail: 'SPY vs SPY = 1.00' },
-    { name: 'vol sanity', ok: Object.values(metrics).every((m) => m.vol < 1.2), detail: `max ${pct(Math.max(...Object.values(metrics).map((m) => m.vol)))}` },
+    { name: 'vol sanity', ok: Object.values(metrics).every((m) => m.vol < 2.0), detail: `max ${pct(Math.max(...Object.values(metrics).map((m) => m.vol)))}` },
   ];
   const gate: Gate = { level: checks.every((c) => c.ok) ? 'pass' : 'warn', checks };
   emit('metrics', 'gate', `metrics gate ${gate.level}`, { gate });

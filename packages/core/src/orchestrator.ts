@@ -25,6 +25,8 @@ import { runBacktest } from './layers/backtest';
 
 export interface RunOptions {
   runId?: string;
+  universe?: AssetSpec[];
+  discovery?: { discovered?: number; candidates?: number; stocks?: number; etfs?: number; crypto?: number };
   config?: Partial<Omit<RunConfig, 'runId'>>;
 }
 
@@ -33,6 +35,7 @@ const nowId = (): string => new Date().toISOString().replace(/[-:T]/g, '').slice
 export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Promise<RunArtifact> {
   const runId = opts.runId ?? nowId();
   const cfg: RunConfig = { runId, ...DEFAULT_CONFIG, ...(opts.config ?? {}) };
+  const universe = opts.universe ?? UNIVERSE;
   const started = Date.now();
   const rec = createRecorder(started);
   const emit = rec.emit;
@@ -56,7 +59,10 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
       ms,
       gate,
       summary,
-      events: rec.events.filter((e: LayerEvent) => e.layer === id),
+      events: [
+        ...rec.events.filter((e: LayerEvent) => e.layer === id),
+        { t: Date.now() - started, layer: id, kind: 'end', msg: summary } as LayerEvent,
+      ],
     });
   };
 
@@ -87,7 +93,7 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
   // 4. Screen
   emit('screen', 'start', 'applying quality gates and written selection reasons');
   t0 = Date.now();
-  const screen = runScreen(metrics.data.metrics, clean.data, UNIVERSE, cfg, emit);
+  const screen = runScreen(metrics.data.metrics, clean.data, universe, cfg, emit);
   layerData.screen = screen.data;
   record('screen', screen.gate.level === 'fail' ? 'fail' : 'ok', Date.now() - t0, screen.gate, screen.summary);
   emit('screen', 'end', screen.summary);
@@ -95,7 +101,8 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
   // 5. Signal
   emit('signal', 'start', 'evaluating trend and momentum states');
   t0 = Date.now();
-  const signal = runSignal(sources.data.series, cfg, emit);
+  const cleaned = sources.data.series.filter((s) => clean.data.returns[s.symbol] !== undefined);
+  const signal = runSignal(cleaned, cfg, emit);
   layerData.signals = signal.data.signals;
   record('signal', signal.gate.level === 'fail' ? 'fail' : 'ok', Date.now() - t0, signal.gate, signal.summary);
   emit('signal', 'end', signal.summary);
@@ -112,7 +119,7 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
   emit('build', 'start', 'sizing the portfolio under hard caps');
   t0 = Date.now();
   const eventAvailable = sources.data.unavailable.length === 0 && raw.some((s) => s.cls === 'Event');
-  const classOf = Object.fromEntries(UNIVERSE.map((s) => [s.symbol, s.cls]));
+  const classOf = Object.fromEntries(universe.map((s) => [s.symbol, s.cls]));
   const build = runBuild(corr.data, cfg, eventAvailable, classOf, emit);
   layerData.weights = build.data.weights;
   record('build', build.gate.level === 'fail' ? 'fail' : 'ok', Date.now() - t0, build.gate, build.summary);
@@ -129,8 +136,6 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
   const weeklyReturns: Record<string, number[]> = {};
   for (const s of screen.data.pool) weeklyReturns[s] = clean.data.returns[s];
 
-  const universe: AssetSpec[] = UNIVERSE;
-
   return {
     schema: 1,
     runId,
@@ -138,6 +143,15 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
     finishedAt: new Date().toISOString(),
     config: cfg,
     universe,
+    discovery: {
+      discovered: opts.discovery?.discovered ?? universe.length,
+      candidates: opts.discovery?.candidates ?? universe.length,
+      fetched: raw.length,
+      pool: screen.data.pool.length,
+      stocks: opts.discovery?.stocks ?? universe.filter((s) => s.cls === 'Equity').length,
+      etfs: opts.discovery?.etfs ?? 0,
+      crypto: opts.discovery?.crypto ?? universe.filter((s) => s.cls === 'Crypto').length,
+    },
     layers,
     weekly: { dates: clean.data.dates, returns: weeklyReturns },
     metrics: metrics.data.metrics,
