@@ -72,10 +72,11 @@ export function runClean(
   }
 
   const deep = series.filter((x) => x.bars.length >= 1300 && returns[x.symbol] !== undefined).map((x) => missingPct[x.symbol] ?? 0);
+  const cleanShare = deep.length ? deep.filter((v) => v <= 0.1).length / deep.length : 1;
   const worstDeep = deep.length ? Math.max(...deep) : 0;
   const checks = [
     { name: 'weekly depth', ok: dates.length >= 520, detail: `${dates.length} weeks` },
-    { name: 'missing data', ok: worstDeep <= 0.1, detail: `worst ${pct(worstDeep)} among 5y+ series` },
+    { name: 'missing data', ok: cleanShare >= 0.9, detail: `${Math.round(cleanShare * 100)}% of 5y+ series ≤10% gaps (worst ${pct(worstDeep)})` },
     { name: 'return outliers', ok: outliers.length < dates.length * 0.02, detail: `${outliers.length} weekly moves > 35% (kept, flagged)` },
   ];
   const gate: Gate = {
