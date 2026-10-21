@@ -32,16 +32,20 @@ jobs:
       # Cloud refresh. If a source is unreachable from the runner, the committed
       # run artifact is used instead and the deploy still succeeds.
       - name: Discover universe
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: pnpm discover
       - name: Fetch history
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         timeout-minutes: 25
         run: pnpm fetch:broad
       - name: Run pipeline
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: pnpm pipeline
       - name: Sync run artifact
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: pnpm --filter @rh-layers/web sync
 
       - run: pnpm build
