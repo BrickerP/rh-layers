@@ -164,16 +164,19 @@ export function Heatmap({
 export function Treemap({
   weights,
   clusters,
+  colors,
   onSelect,
 }: {
   weights: Record<string, number>;
   clusters: string[][];
+  colors?: Record<string, string>;
   onSelect?: (s: string) => void;
 }) {
   const w = 720;
   const h = 300;
   const colorOf = new Map<string, string>();
-  clusters.forEach((c, i) => c.forEach((s) => colorOf.set(s, PALETTE[i % PALETTE.length])));
+  if (colors) for (const [s, c] of Object.entries(colors)) colorOf.set(s, c);
+  else clusters.forEach((c, i) => c.forEach((s) => colorOf.set(s, PALETTE[i % PALETTE.length])));
   const items = Object.entries(weights).sort((a, b) => b[1] - a[1]);
 
   type Rect = { s: string; v: number; x: number; y: number; w: number; h: number };

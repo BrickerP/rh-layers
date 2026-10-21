@@ -19,7 +19,7 @@ pnpm pipeline       # run the eight layers, writes runs/latest.json
 pnpm dev            # http://localhost:5173
 ```
 
-The UI replays the recorded event log. It does not call market data at runtime, so a run is reproducible and can be published as a static site.
+The UI is result-first: Result (portfolio, KPIs, comparison), Process (the eight-stage replay), Data (funnel, gates, sources). It replays a recorded event log and never calls market data at runtime.
 
 ## Layers
 
