@@ -3,9 +3,14 @@ import { annualize, bsPrice, covariance, covToCorr, hrp, ledoitWolf, maxDrawdown
 import type { CleanData } from './clean';
 import { capWeights } from './build';
 import { clusterFromCorr } from './corr';
+import { momentumWeights, priceIndex } from './momentum';
 import { pct } from '../util';
 
-function weightsAt(clean: CleanData, pool: string[], cfg: RunConfig, i: number, classOf: Record<string, string>): { weights: Record<string, number>; eligible: string[] } {
+function weightsAt(clean: CleanData, pool: string[], cfg: RunConfig, i: number, classOf: Record<string, string>, idx?: Record<string, number[]>): { weights: Record<string, number>; eligible: string[] } {
+  if (idx) {
+    const m = momentumWeights(idx, clean, pool, cfg, i);
+    return { weights: m.weights, eligible: m.eligible };
+  }
   const eligible = pool.filter((s) => (clean.validFrom[s] ?? 0) <= i - cfg.windowWeeks && (clean.returns[s]?.length ?? 0) > i);
   if (eligible.length < 5) return { weights: {}, eligible: [] };
   const rows: number[][] = [];
@@ -60,13 +65,14 @@ export function runBacktest(
   const turnover: number[] = [];
   const cost = cfg.costBps / 1e4;
   const spy = clean.returns.SPY ?? new Array(n).fill(0);
+  const idx = cfg.buildMode === 'momentum' ? priceIndex(clean, pool) : undefined;
   const bondSym = clean.returns.AGG ? 'AGG' : 'IEF';
   const bond = clean.returns[bondSym] ?? new Array(n).fill(0);
 
   let prev: Record<string, number> = {};
 
   for (let i = cfg.windowWeeks; i < n; i += cfg.rebalanceWeeks) {
-    const { weights: w, eligible } = weightsAt(clean, pool, cfg, i, classOf);
+    const { weights: w, eligible } = weightsAt(clean, pool, cfg, i, classOf, idx);
     if (eligible.length < 5) continue;
     const eq: Record<string, number> = Object.fromEntries(eligible.map((s) => [s, 1 / eligible.length]));
     const inv: Record<string, number> = {};

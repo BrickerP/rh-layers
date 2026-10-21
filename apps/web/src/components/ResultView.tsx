@@ -15,7 +15,8 @@ export default function ResultView({
   onSymbol: (s: string) => void;
 }) {
   const hrp = run.backtest.stats['HRP core'];
-  const bench = run.backtest.stats['60/40'];
+  const spy = run.backtest.stats['SPY buy & hold'];
+  const label = run.strategyLabel ?? 'Core';
   const positions = Object.entries(run.weights).sort((a, b) => b[1] - a[1]);
   const cls = Object.fromEntries(run.universe.map((u) => [u.symbol, u.cls]));
   const clsTotals: Record<string, number> = {};
@@ -45,11 +46,11 @@ export default function ResultView({
         <div className="kpi">
           <span>Sharpe</span>
           <b>{hrp.sharpe.toFixed(2)}</b>
-          <i>60/40: {bench.sharpe.toFixed(2)}</i>
+          <i>SPY Sharpe: {spy.sharpe.toFixed(2)}</i>
         </div>
         <div className="kpi">
-          <span>vs 60/40</span>
-          <b className={hrp.cagr >= bench.cagr ? 'pos' : 'neg'}>{(hrp.cagr * 100 - bench.cagr * 100).toFixed(1)}pp</b>
+          <span>vs SPY</span>
+          <b className={hrp.cagr >= spy.cagr ? 'pos' : 'neg'}>{(hrp.cagr * 100 - spy.cagr * 100).toFixed(1)}pp</b>
           <i>{positionsCount} positions · {pct(run.cash)} cash</i>
         </div>
       </div>
@@ -87,7 +88,7 @@ export default function ResultView({
 
         <section className="panel">
           <div className="panel-head">
-            <h3>Result vs 60/40</h3>
+            <h3>Result vs SPY</h3>
             <span className="dim">cumulative, costs included</span>
           </div>
           <LineChart
@@ -110,11 +111,11 @@ export default function ResultView({
               </tr>
             </thead>
             <tbody>
-              {['HRP core', '60/40', 'SPY buy & hold', 'Equal weight'].map((k) => {
+              {[{ key: 'HRP core', label }, { key: 'SPY buy & hold', label: 'SPY buy & hold' }, { key: 'Equal weight', label: 'Equal weight' }].map(({ key: k, label: rowLabel }) => {
                 const s = run.backtest.stats[k];
                 return (
                   <tr key={k}>
-                    <td>{k}</td>
+                    <td>{rowLabel}</td>
                     <td className="right mono">{pct(s.cagr)}</td>
                     <td className="right mono">{pct(s.vol)}</td>
                     <td className="right mono neg">{pct(s.maxDD)}</td>

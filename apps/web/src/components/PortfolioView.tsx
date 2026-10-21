@@ -110,7 +110,7 @@ export default function PortfolioView() {
         <div className="kpi">
           <span>backtest CAGR</span>
           <b className="pos">{pct(data.stats.cagr)}</b>
-          <i>60/40: {pct(data.stats.benchCagr)} · SPY: {pct(data.stats.spyCagr ?? 0)}</i>
+          <i>SPY: {pct(data.stats.spyCagr ?? 0)}</i>
         </div>
         <div className="kpi">
           <span>max drawdown</span>
@@ -135,7 +135,7 @@ export default function PortfolioView() {
         <section className="panel">
           <div className="panel-head">
             <h3>Target portfolio</h3>
-            <span className="dim">ETF proxies for the class sleeves · shares rounded down</span>
+            <span className="dim">top 20 momentum names · shares rounded down</span>
           </div>
           <table className="table sheet-table">
             <thead>

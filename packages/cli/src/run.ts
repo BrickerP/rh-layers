@@ -27,6 +27,7 @@ async function main() {
       role: a.role,
       rationale: a.rationale,
       rank: a.rank,
+      market: (a as any).market,
       divYield: a.divYield,
     }));
     discovery = {

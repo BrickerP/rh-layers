@@ -25,6 +25,7 @@ export interface AssetSpec {
   cls: AssetClass;
   role: Role;
   rationale: string;
+  market?: number;
   /** Liquidity/cap rank from discovery; lower is more investable. */
   rank?: number;
   /** Annual distribution yield used only when prices are split-adjusted (not total-return). */
@@ -111,6 +112,10 @@ export interface RunConfig {
   classCaps: Record<string, number>;
   minHistoryWeeks: number;
   maxPoolSize: number;
+  buildMode: 'hrp' | 'momentum';
+  momentumTop: number;
+  momentumLookback: number;
+  momentumTrend: number;
   classQuotas: Record<string, number>;
   cashMin: number;
   smaWindow: number;
@@ -184,6 +189,7 @@ export interface RunArtifact {
   corr: CorrData;
   weights: Record<string, number>;
   cash: number;
+  strategyLabel: string;
   discovery: { discovered: number; candidates: number; fetched: number; pool: number; stocks: number; etfs: number; crypto: number; };
   backtest: BacktestData;
   provenance: Record<string, { source: string; provenance: string; bars: number }>;

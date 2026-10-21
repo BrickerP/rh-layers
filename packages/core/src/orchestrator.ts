@@ -120,7 +120,7 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
   t0 = Date.now();
   const eventAvailable = sources.data.unavailable.length === 0 && raw.some((s) => s.cls === 'Event');
   const classOf = Object.fromEntries(universe.map((s) => [s.symbol, s.cls]));
-  const build = runBuild(corr.data, cfg, eventAvailable, classOf, emit);
+  const build = runBuild(corr.data, cfg, eventAvailable, classOf, clean.data, emit);
   layerData.weights = build.data.weights;
   record('build', build.gate.level === 'fail' ? 'fail' : 'ok', Date.now() - t0, build.gate, build.summary);
   emit('build', 'end', build.summary);
@@ -143,6 +143,7 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
     finishedAt: new Date().toISOString(),
     config: cfg,
     universe,
+    strategyLabel: cfg.buildMode === 'momentum' ? `Momentum ${cfg.momentumTop}` : 'HRP core',
     discovery: {
       discovered: opts.discovery?.discovered ?? universe.length,
       candidates: opts.discovery?.candidates ?? universe.length,

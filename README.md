@@ -39,7 +39,8 @@ The UI is result-first: Result (portfolio, KPIs, comparison), Process (the eight
 - Correlation is estimated on weekly returns, shrunk toward a constant-correlation target (Ledoit-Wolf).
 - Assets are clustered on correlation distance; caps apply per cluster, per asset class and per asset.
 - Caps scale **downwards only**: if a cap binds, the residual becomes cash instead of levering up or breaching the limit.
-- Weights come from Hierarchical Risk Parity, not mean-variance: expected returns are the least reliable input.
+- Default build mode is **momentum**: rank the pool by 12-month momentum, keep the top 20 above their 40-week average, size by inverse volatility, cap 10% per name. No class caps — the strategy may hold 100% equities, crypto, or cash.
+- The HRP path remains available by setting `buildMode: 'hrp'`; it is shown as a benchmark, not the default.
 - The backtest is walk-forward: weights at each rebalance use trailing data only, and the eligible set expands as assets build history.
 
 ### Overlays

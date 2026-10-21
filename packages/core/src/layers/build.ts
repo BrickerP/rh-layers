@@ -1,4 +1,6 @@
 import type { CorrData, Gate, LayerId, RunConfig } from '../types';
+import type { CleanData } from './clean';
+import { momentumWeights, priceIndex } from './momentum';
 import { pct } from '../util';
 
 /**
@@ -124,15 +126,18 @@ export function runBuild(
   cfg: RunConfig,
   eventAvailable: boolean,
   classOf: Record<string, string>,
+  clean: CleanData,
   emit: (layer: LayerId, kind: 'start' | 'progress' | 'gate' | 'end' | 'error', msg: string, data?: Record<string, unknown>) => void,
 ): { data: BuildData; gate: Gate; summary: string } {
-  const capped = capWeights(corr.weights, corr.clusters, cfg, classOf);
+  const pool = Object.keys(corr.weights);
+  const momentum = cfg.buildMode === 'momentum' ? momentumWeights(priceIndex(clean, pool), clean, pool, cfg, clean.dates.length - 1) : null;
+  const capped = momentum ? momentum.weights : capWeights(corr.weights, corr.clusters, cfg, classOf);
   Object.entries(capped)
     .sort((a, b) => b[1] - a[1])
     .forEach(([k, v]) => emit('build', 'progress', `${k} → ${pct(v)}`, { symbol: k, weight: v }));
 
   const sumW = Object.values(capped).reduce((a, b) => a + b, 0);
-  const cash = Math.max(cfg.cashMin, 1 - sumW);
+  const cash = momentum ? Math.max(cfg.cashMin, momentum.cash) : Math.max(cfg.cashMin, 1 - sumW);
 
   // Overlays never enter the covariance solve; they are sized by explicit policy.
   const eventSleeve = eventAvailable
@@ -146,13 +151,20 @@ export function runBuild(
     classTotals[c] = (classTotals[c] ?? 0) + v;
   }
 
-  const checks = [
-    { name: 'Σw ≤ 1', ok: sumW <= 1 + 1e-6, detail: `risk assets ${pct(sumW)} · cash ${pct(cash)}` },
-    { name: 'asset cap', ok: Object.values(capped).every((v) => v <= cfg.maxAssetWeight + 1e-9), detail: `max ${pct(Math.max(...Object.values(capped)))} ≤ ${pct(cfg.maxAssetWeight)}` },
-    { name: 'cluster cap', ok: corr.clusters.every((c) => c.reduce((a, s) => a + (capped[s] ?? 0), 0) <= cfg.maxClusterWeight + 1e-6), detail: corr.clusters.map((c) => pct(c.reduce((a, s) => a + (capped[s] ?? 0), 0), 0)).join(' / ') },
-    { name: 'class caps', ok: Object.entries(classTotals).every(([c, v]) => v <= (cfg.classCaps[c] ?? 1) + 1e-6), detail: Object.entries(classTotals).map(([c, v]) => `${c} ${pct(v, 0)}`).join(' · ') },
-    { name: 'overlay ring-fenced', ok: eventSleeve.weight + optionSleeve.weight <= 0.05, detail: `overlay ${pct(eventSleeve.weight + optionSleeve.weight)} of NAV` },
-  ];
+  const checks = momentum
+    ? [
+        { name: 'Σw ≤ 1', ok: sumW <= 1 + 1e-6, detail: `risk assets ${pct(sumW)} · cash ${pct(cash)}` },
+        { name: 'asset cap', ok: Object.values(capped).every((v) => v <= cfg.maxAssetWeight + 1e-9), detail: `max ${pct(Math.max(...Object.values(capped)))} ≤ ${pct(cfg.maxAssetWeight)}` },
+        { name: 'position count', ok: Object.keys(capped).length <= cfg.momentumTop, detail: `${Object.keys(capped).length} ≤ ${cfg.momentumTop}` },
+        { name: 'no class caps', ok: true, detail: 'momentum mode: any asset class may go to 0 or 100%' },
+      ]
+    : [
+        { name: 'Σw ≤ 1', ok: sumW <= 1 + 1e-6, detail: `risk assets ${pct(sumW)} · cash ${pct(cash)}` },
+        { name: 'asset cap', ok: Object.values(capped).every((v) => v <= cfg.maxAssetWeight + 1e-9), detail: `max ${pct(Math.max(...Object.values(capped)))} ≤ ${pct(cfg.maxAssetWeight)}` },
+        { name: 'cluster cap', ok: corr.clusters.every((c) => c.reduce((a, s) => a + (capped[s] ?? 0), 0) <= cfg.maxClusterWeight + 1e-6), detail: corr.clusters.map((c) => pct(c.reduce((a, s) => a + (capped[s] ?? 0), 0), 0)).join(' / ') },
+        { name: 'class caps', ok: Object.entries(classTotals).every(([c, v]) => v <= (cfg.classCaps[c] ?? 1) + 1e-6), detail: Object.entries(classTotals).map(([c, v]) => `${c} ${pct(v, 0)}`).join(' · ') },
+        { name: 'overlay ring-fenced', ok: eventSleeve.weight + optionSleeve.weight <= 0.05, detail: `overlay ${pct(eventSleeve.weight + optionSleeve.weight)} of NAV` },
+      ];
   const gate: Gate = { level: checks.every((c) => c.ok) ? 'pass' : 'fail', checks };
   emit('build', 'gate', `build gate ${gate.level}`, { gate });
   const top = Object.entries(capped).sort((a, b) => b[1] - a[1])[0];
