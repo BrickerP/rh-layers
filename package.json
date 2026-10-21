@@ -10,7 +10,8 @@
     "typecheck": "pnpm -r typecheck",
     "discover": "pnpm --filter @rh-layers/cli discover",
     "fetch:broad": "pnpm --filter @rh-layers/cli fetch:broad",
-    "refresh": "(pnpm discover || true) && (pnpm fetch:broad || true) && pnpm pipeline && pnpm --filter @rh-layers/web sync"
+    "refresh": "(pnpm discover || true) && (pnpm fetch:broad || true) && pnpm pipeline && pnpm portfolio && pnpm --filter @rh-layers/web sync",
+    "portfolio": "pnpm --filter @rh-layers/cli portfolio"
   },
   "devDependencies": {
     "typescript": "^5.9.2"

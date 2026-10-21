@@ -1,0 +1,147 @@
+{
+  "asOf": "2026-10-21",
+  "pricesLive": false,
+  "runId": "20261021125530",
+  "dataDate": "2026-10-19",
+  "capitalDefault": 100000,
+  "classes": [
+    {
+      "cls": "Equity",
+      "weight": 0.55
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.1959730165791884
+    },
+    {
+      "cls": "Commodity",
+      "weight": 0.11518836084045146
+    },
+    {
+      "cls": "Crypto",
+      "weight": 0.07999999999999999
+    },
+    {
+      "cls": "Real Assets",
+      "weight": 0.029602956018203282
+    },
+    {
+      "cls": "Real Estate",
+      "weight": 0.029235666562156454
+    }
+  ],
+  "positions": [
+    {
+      "symbol": "SPY",
+      "name": "S&P 500",
+      "cls": "Equity",
+      "weight": 0.3850000000000001,
+      "price": 769.98,
+      "crypto": false,
+      "live": false
+    },
+    {
+      "symbol": "EFA",
+      "name": "Developed ex-US",
+      "cls": "Equity",
+      "weight": 0.16500000000000006,
+      "price": 104.26,
+      "crypto": false,
+      "live": false
+    },
+    {
+      "symbol": "AGG",
+      "name": "US aggregate bonds",
+      "cls": "Fixed Income",
+      "weight": 0.12738246077647253,
+      "price": 95.42,
+      "crypto": false,
+      "live": false
+    },
+    {
+      "symbol": "VGLT",
+      "name": "US long Treasuries",
+      "cls": "Fixed Income",
+      "weight": 0.06859055580271596,
+      "price": 51.532,
+      "crypto": false,
+      "live": false
+    },
+    {
+      "symbol": "GLD",
+      "name": "Gold",
+      "cls": "Commodity",
+      "weight": 0.0691130165042709,
+      "price": 378.94,
+      "crypto": false,
+      "live": false
+    },
+    {
+      "symbol": "DBC",
+      "name": "Broad commodities",
+      "cls": "Commodity",
+      "weight": 0.0460753443361806,
+      "price": 33.39,
+      "crypto": false,
+      "live": false
+    },
+    {
+      "symbol": "BTC-USD",
+      "name": "Bitcoin",
+      "cls": "Crypto",
+      "weight": 0.04800000000000001,
+      "price": 83333.01,
+      "crypto": true,
+      "live": true
+    },
+    {
+      "symbol": "ETH-USD",
+      "name": "Ethereum",
+      "cls": "Crypto",
+      "weight": 0.03200000000000001,
+      "price": 2462.23,
+      "crypto": true,
+      "live": true
+    },
+    {
+      "symbol": "IGF",
+      "name": "Global infrastructure",
+      "cls": "Real Assets",
+      "weight": 0.029602956018203293,
+      "price": 64.41,
+      "crypto": false,
+      "live": false
+    },
+    {
+      "symbol": "VNQ",
+      "name": "US REITs",
+      "cls": "Real Estate",
+      "weight": 0.029235666562156464,
+      "price": 92.62,
+      "crypto": false,
+      "live": false
+    }
+  ],
+  "stats": {
+    "cagr": 0.07522852738877628,
+    "maxDD": -0.20498689474843135,
+    "sharpe": 0.8225866505610382,
+    "benchCagr": 0.08479970821028426,
+    "benchMaxDD": -0.2006777975969437
+  },
+  "rules": [
+    "Rebalance every 6 months, or when a class drifts more than 5 percentage points.",
+    "Use new contributions to top up underweight classes before selling anything.",
+    "Crypto sleeve capped at 8% of the portfolio; rebalance back to target, do not let it compound past the cap.",
+    "No leverage, no shorting, no options in the core portfolio.",
+    "If cash appears because a cap binds, hold it in T-bills / money market, not in the risk assets."
+  ],
+  "checklist": [
+    "Check the as-of date: if the data is older than 5 trading days, refresh before trading.",
+    "Compare current class weights to the target table; list every drift above 5pp.",
+    "Direct new cash to the largest underweight first; only sell if cash is unavailable.",
+    "For each trade, use limit orders and check the spread; avoid the first/last 15 minutes.",
+    "Recompute share counts with the latest prices after fills; update the target sheet.",
+    "Log the trade date, reason (drift / contribution), and the resulting weights."
+  ]
+}

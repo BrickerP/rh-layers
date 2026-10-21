@@ -8,7 +8,8 @@
     "pipeline": "tsx src/run.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "discover": "tsx src/discover.ts",
-    "fetch:broad": "tsx src/fetchBroad.ts"
+    "fetch:broad": "tsx src/fetchBroad.ts",
+    "portfolio": "tsx src/buildPortfolio.ts"
   },
   "dependencies": {
     "@rh-layers/core": "workspace:*"
