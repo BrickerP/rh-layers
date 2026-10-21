@@ -71,7 +71,7 @@ export function runClean(
     }
   }
 
-  const deep = series.filter((x) => x.bars.length >= 1300).map((x) => missingPct[x.symbol] ?? 0);
+  const deep = series.filter((x) => x.bars.length >= 1300 && returns[x.symbol] !== undefined).map((x) => missingPct[x.symbol] ?? 0);
   const worstDeep = deep.length ? Math.max(...deep) : 0;
   const checks = [
     { name: 'weekly depth', ok: dates.length >= 520, detail: `${dates.length} weeks` },
