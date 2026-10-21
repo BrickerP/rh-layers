@@ -153,6 +153,7 @@ export function runBacktest(
     'HRP core': perf(active),
     'HRP + trend units': perf(strategyTrend.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
     '60/40': perf(sixtyForty),
+    'SPY buy & hold': perf(spy.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
     'Equal weight': perf(equalWeight.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
     'Inverse vol': perf(minVariance.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
   };

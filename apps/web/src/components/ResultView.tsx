@@ -110,7 +110,7 @@ export default function ResultView({
               </tr>
             </thead>
             <tbody>
-              {['HRP core', '60/40', 'Equal weight'].map((k) => {
+              {['HRP core', '60/40', 'SPY buy & hold', 'Equal weight'].map((k) => {
                 const s = run.backtest.stats[k];
                 return (
                   <tr key={k}>

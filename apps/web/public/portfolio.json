@@ -1,7 +1,7 @@
 {
   "asOf": "2026-10-21",
   "pricesLive": false,
-  "runId": "20261021125530",
+  "runId": "20261021135130",
   "dataDate": "2026-10-19",
   "capitalDefault": 100000,
   "classes": [
@@ -90,7 +90,7 @@
       "name": "Bitcoin",
       "cls": "Crypto",
       "weight": 0.04800000000000001,
-      "price": 83333.01,
+      "price": 83855.99,
       "crypto": true,
       "live": true
     },
@@ -99,7 +99,7 @@
       "name": "Ethereum",
       "cls": "Crypto",
       "weight": 0.03200000000000001,
-      "price": 2462.23,
+      "price": 2474.07,
       "crypto": true,
       "live": true
     },
@@ -127,7 +127,9 @@
     "maxDD": -0.20498689474843135,
     "sharpe": 0.8225866505610382,
     "benchCagr": 0.08479970821028426,
-    "benchMaxDD": -0.2006777975969437
+    "benchMaxDD": -0.2006777975969437,
+    "spyCagr": 0.09295847738168939,
+    "spyMaxDD": -0.31828959651856625
   },
   "rules": [
     "Rebalance every 6 months, or when a class drifts more than 5 percentage points.",

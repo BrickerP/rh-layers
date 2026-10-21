@@ -17,7 +17,7 @@ interface Portfolio {
   pricesLive: boolean;
   classes: { cls: string; weight: number }[];
   positions: Position[];
-  stats: { cagr: number; maxDD: number; sharpe: number; benchCagr: number; benchMaxDD: number };
+  stats: { cagr: number; maxDD: number; sharpe: number; benchCagr: number; benchMaxDD: number; spyCagr?: number; spyMaxDD?: number };
   rules: string[];
   checklist: string[];
 }
@@ -110,7 +110,7 @@ export default function PortfolioView() {
         <div className="kpi">
           <span>backtest CAGR</span>
           <b className="pos">{pct(data.stats.cagr)}</b>
-          <i>60/40: {pct(data.stats.benchCagr)}</i>
+          <i>60/40: {pct(data.stats.benchCagr)} · SPY: {pct(data.stats.spyCagr ?? 0)}</i>
         </div>
         <div className="kpi">
           <span>max drawdown</span>

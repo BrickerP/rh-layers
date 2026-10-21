@@ -101,6 +101,8 @@ async function main() {
       sharpe: runJson.backtest.stats['HRP core'].sharpe,
       benchCagr: runJson.backtest.stats['60/40'].cagr,
       benchMaxDD: runJson.backtest.stats['60/40'].maxDD,
+      spyCagr: runJson.backtest.stats['SPY buy & hold']?.cagr ?? 0,
+      spyMaxDD: runJson.backtest.stats['SPY buy & hold']?.maxDD ?? 0,
     },
     rules: [
       'Rebalance every 6 months, or when a class drifts more than 5 percentage points.',
