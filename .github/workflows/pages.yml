@@ -1,0 +1,58 @@
+name: build-and-deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RH_MCP_TOKEN: ${{ secrets.RH_MCP_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Optional refresh: requires the read-only Robinhood MCP token in repo secrets.
+      # Without it we build from the committed run artifact.
+      - name: Refresh data via read-only MCP
+        if: ${{ env.RH_MCP_TOKEN != '' }}
+        run: |
+          pnpm run data
+          pnpm pipeline
+          pnpm --filter @rh-layers/web sync
+
+      - run: pnpm build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+data/raw/
+data/.cache/
+data/fixture/
+runs/*
+!runs/.gitkeep
+.env
+.env.*
+*.local
+coverage/
