@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "discover": "tsx src/discover.ts",
     "fetch:broad": "tsx src/fetchBroad.ts",
-    "portfolio": "tsx src/buildPortfolio.ts"
+    "portfolio": "tsx src/buildPortfolio.ts",
+    "reps": "tsx src/fetchReps.ts",
+    "classes": "tsx src/buildClasses.ts"
   },
   "dependencies": {
     "@rh-layers/core": "workspace:*"

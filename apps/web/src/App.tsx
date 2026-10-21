@@ -3,12 +3,12 @@ import type { LayerEvent, LayerId, RunArtifact } from '@rh-layers/core';
 import FlowGraph, { type StageStatus } from './components/FlowGraph';
 import Timeline from './components/Timeline';
 import { AssetPassport, LayerView } from './components/LayerViews';
-import ResultView from './components/ResultView';
+import ClassesView from './components/ClassesView';
 import DataView from './components/DataView';
 import PortfolioView from './components/PortfolioView';
 import { LAYERS, LAYER_BY_ID } from './lib/meta';
 
-type Tab = 'portfolio' | 'result' | 'process' | 'data';
+type Tab = 'classes' | 'portfolio' | 'process' | 'data';
 
 function useReplay(events: LayerEvent[]) {
   const maxT = Math.max(1, ...events.map((e) => e.t));
@@ -74,7 +74,7 @@ function statusAt(layer: RunArtifact['layers'][number], vt: number): StageStatus
 export default function App() {
   const [run, setRun] = useState<RunArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('portfolio');
+  const [tab, setTab] = useState<Tab>('classes');
   const [focus, setFocus] = useState<LayerId>('backtest');
   const [symbol, setSymbol] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
@@ -141,7 +141,7 @@ export default function App() {
         </div>
 
         <nav className="tabs">
-          {(['portfolio', 'result', 'process', 'data'] as Tab[]).map((t) => (
+          {(['classes', 'portfolio', 'process', 'data'] as Tab[]).map((t) => (
             <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
               {t}
             </button>
@@ -160,22 +160,15 @@ export default function App() {
         </div>
       </header>
 
-      {tab === 'portfolio' && (
+      {tab === 'classes' && (
         <main className="page">
-          <PortfolioView />
+          <ClassesView />
         </main>
       )}
 
-      {tab === 'result' && (
-        <main className="page result-page">
-          <ResultView
-            run={run}
-            onStage={(id) => {
-              setFocus(id);
-              setTab('process');
-            }}
-            onSymbol={setSymbol}
-          />
+      {tab === 'portfolio' && (
+        <main className="page">
+          <PortfolioView />
         </main>
       )}
 

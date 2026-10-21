@@ -10,3 +10,4 @@ runs/*
 .env.*
 *.local
 coverage/
+data/reps/

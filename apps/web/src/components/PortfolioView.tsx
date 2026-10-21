@@ -135,7 +135,7 @@ export default function PortfolioView() {
         <section className="panel">
           <div className="panel-head">
             <h3>Target portfolio</h3>
-            <span className="dim">top 20 momentum names · shares rounded down</span>
+            <span className="dim">strategic class mix · annual rebalance · shares rounded down</span>
           </div>
           <table className="table sheet-table">
             <thead>

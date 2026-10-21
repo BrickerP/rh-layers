@@ -19,7 +19,7 @@ pnpm pipeline       # run the eight layers, writes runs/latest.json
 pnpm dev            # http://localhost:5173
 ```
 
-The UI is result-first: Result (portfolio, KPIs, comparison), Process (the eight-stage replay), Data (funnel, gates, sources). It replays a recorded event log and never calls market data at runtime.
+The UI is class-first: Classes (quality table, hedge map, growth/balanced/defensive mixes), Portfolio (annual strategic sheet), Process (the eight-stage replay), Data (funnel, gates, sources). It replays a recorded event log and never calls market data at runtime.
 
 ## Layers
 

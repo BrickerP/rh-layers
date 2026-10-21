@@ -1,228 +1,247 @@
 {
   "asOf": "2026-10-21",
-  "runId": "20261021135843",
+  "runId": "classes",
   "dataDate": "2026-10-19",
   "capitalDefault": 100000,
   "pricesLive": true,
-  "strategy": "Momentum 20",
+  "strategy": "Balanced strategic mix",
   "classes": [
     {
       "cls": "Equity",
-      "weight": 0.8027947886227299
+      "weight": 0.41000000000000003
+    },
+    {
+      "cls": "Equity",
+      "weight": 0.41000000000000003
+    },
+    {
+      "cls": "Equity",
+      "weight": 0.41000000000000003
+    },
+    {
+      "cls": "Equity",
+      "weight": 0.41000000000000003
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.32999999999999996
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.32999999999999996
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.32999999999999996
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.32999999999999996
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.32999999999999996
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.32999999999999996
+    },
+    {
+      "cls": "Fixed Income",
+      "weight": 0.32999999999999996
+    },
+    {
+      "cls": "Cash",
+      "weight": 0.01
     },
     {
       "cls": "Commodity",
-      "weight": 0.16339292758312188
+      "weight": 0.14
+    },
+    {
+      "cls": "Commodity",
+      "weight": 0.14
+    },
+    {
+      "cls": "Real Estate",
+      "weight": 0.04
+    },
+    {
+      "cls": "Real Assets",
+      "weight": 0.04
     },
     {
       "cls": "Crypto",
-      "weight": 0.03328502613606708
+      "weight": 0.03
     }
   ],
   "positions": [
     {
-      "symbol": "MRK",
-      "name": "默沙东",
+      "symbol": "SPY",
+      "name": "US large cap",
       "cls": "Equity",
+      "weight": 0.25,
+      "price": 768.9,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "GLD",
+      "name": "Gold",
+      "cls": "Commodity",
       "weight": 0.1,
-      "price": 148.76,
+      "price": 378.49,
       "crypto": false,
       "live": true
     },
     {
-      "symbol": "XLE",
-      "name": "能源指数ETF-SPDR",
+      "symbol": "EFA",
+      "name": "Developed ex-US",
+      "cls": "Equity",
+      "weight": 0.08,
+      "price": 104.0351,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "AGG",
+      "name": "US aggregate bonds",
+      "cls": "Fixed Income",
+      "weight": 0.08,
+      "price": 95.3525,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "IEF",
+      "name": "US 7-10y Treasuries",
+      "cls": "Fixed Income",
+      "weight": 0.08,
+      "price": 90.3,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "EEM",
+      "name": "Emerging markets",
+      "cls": "Equity",
+      "weight": 0.05,
+      "price": 63.385,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "LQD",
+      "name": "US IG credit",
+      "cls": "Fixed Income",
+      "weight": 0.05,
+      "price": 103.21,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "VGLT",
+      "name": "US 20y+ Treasuries",
+      "cls": "Fixed Income",
+      "weight": 0.04,
+      "price": 51.465,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "TIP",
+      "name": "US TIPS",
+      "cls": "Fixed Income",
+      "weight": 0.04,
+      "price": 105.58,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "HYG",
+      "name": "US high yield",
+      "cls": "Fixed Income",
+      "weight": 0.04,
+      "price": 76.895,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "DBC",
+      "name": "Broad commodities",
       "cls": "Commodity",
-      "weight": 0.09132692491376576,
-      "price": 67.91,
+      "weight": 0.04,
+      "price": 33.46,
       "crypto": false,
       "live": true
     },
     {
-      "symbol": "AMGN",
-      "name": "安进",
+      "symbol": "VNQ",
+      "name": "US REITs",
+      "cls": "Real Estate",
+      "weight": 0.04,
+      "price": 91.865,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "IGF",
+      "name": "Global infrastructure",
+      "cls": "Real Assets",
+      "weight": 0.04,
+      "price": 64.31,
+      "crypto": false,
+      "live": true
+    },
+    {
+      "symbol": "IWM",
+      "name": "US small cap",
       "cls": "Equity",
-      "weight": 0.08497885426092808,
-      "price": 438.07,
+      "weight": 0.03,
+      "price": 276.68,
       "crypto": false,
       "live": true
     },
     {
-      "symbol": "LLY",
-      "name": "礼来",
-      "cls": "Equity",
-      "weight": 0.07266233969198635,
-      "price": 1272.33,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "ADI",
-      "name": "亚德诺",
-      "cls": "Equity",
-      "weight": 0.06892185881935839,
-      "price": 402.95,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "CSCO",
-      "name": "思科",
-      "cls": "Equity",
-      "weight": 0.06862578216818872,
-      "price": 107.505,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "TXN",
-      "name": "德州仪器",
-      "cls": "Equity",
-      "weight": 0.06375368926167618,
-      "price": 283.43,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "ASML",
-      "name": "阿斯麦",
-      "cls": "Equity",
-      "weight": 0.05671038438569548,
-      "price": 1669.97,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "SCCO",
-      "name": "南方铜业",
-      "cls": "Equity",
-      "weight": 0.055135742000389,
-      "price": 195.89,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "PANW",
-      "name": "派拓网络",
-      "cls": "Equity",
-      "weight": 0.039108967604009816,
-      "price": 345.11,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "USO",
-      "name": "美国原油ETF",
-      "cls": "Commodity",
-      "weight": 0.038362024181398356,
-      "price": 159.19,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "CRWD",
-      "name": "CrowdStrike Holdings Inc-A",
-      "cls": "Equity",
-      "weight": 0.036787471908190456,
-      "price": 233.165,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "INTC",
-      "name": "英特尔",
-      "cls": "Equity",
-      "weight": 0.034202777511918275,
-      "price": 91.535,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "UCO",
-      "name": "二倍做多原油ETF-ProShares",
-      "cls": "Commodity",
-      "weight": 0.03370397848795775,
-      "price": 63.5899,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "AMD",
-      "name": "超威半导体",
-      "cls": "Equity",
-      "weight": 0.03248509437839973,
-      "price": 542.49,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "MRVL",
-      "name": "迈威尔科技",
-      "cls": "Equity",
-      "weight": 0.03206964342946862,
-      "price": 241.61,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "DELL",
-      "name": "戴尔科技",
-      "cls": "Equity",
-      "weight": 0.029179164028532652,
-      "price": 484.67,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "MU",
-      "name": "美光科技",
-      "cls": "Equity",
-      "weight": 0.028173019173988335,
-      "price": 907.395,
-      "crypto": false,
-      "live": true
-    },
-    {
-      "symbol": "NEAR-USD",
-      "name": "NEAR",
+      "symbol": "BTC-USD",
+      "name": "Bitcoin",
       "cls": "Crypto",
-      "weight": 0.01941911514129343,
-      "price": 5.17,
+      "weight": 0.03,
+      "price": 84123.12,
       "crypto": true,
       "live": true
     },
     {
-      "symbol": "ZEC-USD",
-      "name": "ZEC",
-      "cls": "Crypto",
-      "weight": 0.013865910994773648,
-      "price": 1310.66,
-      "crypto": true,
+      "symbol": "SHY",
+      "name": "US 1-3y Treasuries",
+      "cls": "Cash",
+      "weight": 0.01,
+      "price": 81.317,
+      "crypto": false,
       "live": true
     }
   ],
   "stats": {
-    "cagr": 0.132400351775108,
-    "maxDD": -0.36398635546203095,
-    "sharpe": 0.7199234473616166,
-    "benchCagr": 0.09295847738168939,
-    "benchMaxDD": -0.31828959651856625,
-    "spyCagr": 0.09295847738168939,
-    "spyMaxDD": -0.31828959651856625
+    "cagr": 0.09865863633607153,
+    "maxDD": -0.21132762177796816,
+    "sharpe": 0.9398111001872222,
+    "benchCagr": 0.15359873569325622,
+    "benchMaxDD": -0.31828959651856614,
+    "spyCagr": 0.15359873569325622,
+    "spyMaxDD": -0.31828959651856614
   },
   "rules": [
-    "Rebalance every 6 months: rerank the universe by 12-month momentum, keep the top 20 above their 40-week average.",
-    "Size by inverse volatility; no single position above 10% of NAV.",
-    "No class caps: the strategy may hold 100% equities, crypto, or cash. It goes where momentum is.",
-    "If fewer than 20 names qualify, the remainder stays in T-bills / money market.",
-    "No leverage and no shorting in the core sleeve."
+    "Strategic weights, rebalanced once a year — not a daily or monthly portfolio.",
+    "Weights come from HRP on asset-class representatives with a 25% class cap and 5% crypto cap.",
+    "No tactical signals: the point is the long-run class mix and the hedge structure.",
+    "Rebalance when a class drifts more than 5 percentage points, or on the calendar.",
+    "No leverage and no shorting."
   ],
   "checklist": [
-    "Refresh the run and confirm the as-of date is within 5 trading days.",
-    "Compare current holdings to the new top-20 list; list exits and entries.",
-    "Enter new names at 1/20 risk weight; trim any position above 10%.",
-    "Use limit orders and avoid the first/last 15 minutes of the session.",
-    "Recompute share counts after fills and update this sheet.",
-    "Log turnover, reason (rerank), and the new weights."
+    "Check the data date and refresh the class series if older than a month.",
+    "Compare class weights to target; list drifts above 5pp.",
+    "Rebalance with new cash first; sell only the largest overweight.",
+    "Recompute share counts after fills and update the sheet.",
+    "Review once a year whether the class set still matches your goals."
   ]
 }
