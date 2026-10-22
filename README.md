@@ -77,8 +77,10 @@ correlations and hedges. **Process** / **Data** replay the broad 8-layer researc
 
 ## Refresh
 
-- GitHub Actions runs daily at 22:30 UTC: `pnpm sleeves` (continue-on-error) → `pnpm frontier` → build → deploy.
-- Push builds deploy the committed `frontier.json` without fetching.
+- Every deploy (daily cron at 22:30 UTC and every push) runs `pnpm sleeves` (continue-on-error) →
+  `pnpm frontier` → build → deploy, so the deployed numbers are always as of the last close.
+- If a data source is unreachable the committed `data/sleeves/` history is used as-is; the page shows the
+  `generated` date and the last quote date.
 
 ## Commands
 

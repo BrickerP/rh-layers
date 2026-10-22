@@ -29,16 +29,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Daily: extend the committed sleeve history (Nasdaq for stocks/ETFs, Binance for crypto),
-      # refresh quotes, and re-estimate the frontier. If a source is unreachable the committed
-      # history is used as-is, so the deploy never depends on a third-party endpoint.
+      # Extend the committed sleeve history (Nasdaq for stocks/ETFs, Binance for crypto), refresh
+      # quotes and re-estimate the frontier on every run. A failed source falls back to the
+      # committed history, so the deploy never depends on a third-party endpoint being up.
       - name: Refresh sleeves
-        if: github.event_name != 'push'
         continue-on-error: true
         timeout-minutes: 8
         run: pnpm sleeves
       - name: Rebuild frontier
-        if: github.event_name != 'push'
         run: pnpm frontier
 
       - run: pnpm build
