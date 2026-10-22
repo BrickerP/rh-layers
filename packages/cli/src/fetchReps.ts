@@ -22,6 +22,10 @@ const REPS: { symbol: string; name: string; cls: string; y: number }[] = [
   { symbol: 'GLD', name: 'Gold', cls: 'Commodity', y: 0 },
   { symbol: 'DBC', name: 'Broad commodities', cls: 'Commodity', y: 0 },
   { symbol: 'IGF', name: 'Global infrastructure', cls: 'Real Assets', y: 0.028 },
+  { symbol: 'SMH', name: 'Semiconductors', cls: 'Equity', y: 0.005 },
+  { symbol: 'BOTZ', name: 'Robotics & AI', cls: 'Equity', y: 0.005 },
+  { symbol: 'ARKX', name: 'Space exploration', cls: 'Equity', y: 0 },
+  { symbol: 'QQQ', name: 'Nasdaq 100', cls: 'Equity', y: 0.006 },
 ];
 
 async function curlJson(url: string): Promise<any> {

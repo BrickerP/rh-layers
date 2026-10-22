@@ -135,6 +135,7 @@ export async function runPipeline(raw: PriceSeries[], opts: RunOptions = {}): Pr
 
   const weeklyReturns: Record<string, number[]> = {};
   for (const s of screen.data.pool) weeklyReturns[s] = clean.data.returns[s];
+  if (clean.data.returns.SPY) weeklyReturns.SPY = clean.data.returns.SPY;
 
   return {
     schema: 1,

@@ -10,7 +10,7 @@ export default function DataView({ run }: { run: RunArtifact }) {
     ['candidates', run.discovery.candidates, 'liquidity / market-cap screen'],
     ['history', run.discovery.fetched, '10y adjusted daily bars fetched'],
     ['pool', run.screen.pool.length, 'class quotas + quality gates'],
-    ['positions', Object.keys(run.weights).length, 'HRP weights after caps'],
+    ['positions', Object.keys(run.weights).length, 'weights after the build layer'],
   ];
   const sources = Object.entries(run.provenance);
   const bySource = sources.reduce<Record<string, number>>((a, [_, p]) => {

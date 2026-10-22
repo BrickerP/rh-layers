@@ -3,16 +3,17 @@
   "private": true,
   "packageManager": "pnpm@11.16.0",
   "scripts": {
-    "data": "pnpm --filter @rh-layers/cli data",
     "pipeline": "pnpm --filter @rh-layers/cli pipeline",
     "dev": "pnpm --filter @rh-layers/web dev",
     "build": "pnpm -r typecheck && pnpm --filter @rh-layers/web build",
     "typecheck": "pnpm -r typecheck",
     "discover": "pnpm --filter @rh-layers/cli discover",
     "fetch:broad": "pnpm --filter @rh-layers/cli fetch:broad",
-    "refresh": "(pnpm discover || true) && (pnpm fetch:broad || true) && (pnpm reps || true) && pnpm pipeline && pnpm classes && pnpm --filter @rh-layers/web sync",
-    "portfolio": "pnpm --filter @rh-layers/cli portfolio",
-    "classes": "pnpm --filter @rh-layers/cli classes"
+    "refresh": "pnpm sleeves && pnpm frontier",
+    "classes": "pnpm --filter @rh-layers/cli classes",
+    "sleeves": "pnpm --filter @rh-layers/cli sleeves",
+    "frontier": "pnpm --filter @rh-layers/cli frontier",
+    "refresh:pipeline": "(pnpm discover || true) && (pnpm fetch:broad || true) && pnpm pipeline && pnpm --filter @rh-layers/web sync"
   },
   "devDependencies": {
     "typescript": "^5.9.2"

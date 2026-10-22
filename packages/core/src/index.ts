@@ -4,3 +4,4 @@ export * from './universe';
 export * from './config';
 export * from './util';
 export * from './orchestrator';
+export * from './frontier';

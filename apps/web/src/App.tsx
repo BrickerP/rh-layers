@@ -6,9 +6,10 @@ import { AssetPassport, LayerView } from './components/LayerViews';
 import ClassesView from './components/ClassesView';
 import DataView from './components/DataView';
 import PortfolioView from './components/PortfolioView';
+import FrontierView from './components/FrontierView';
 import { LAYERS, LAYER_BY_ID } from './lib/meta';
 
-type Tab = 'classes' | 'portfolio' | 'process' | 'data';
+type Tab = 'frontier' | 'portfolio' | 'classes' | 'process' | 'data';
 
 function useReplay(events: LayerEvent[]) {
   const maxT = Math.max(1, ...events.map((e) => e.t));
@@ -74,7 +75,7 @@ function statusAt(layer: RunArtifact['layers'][number], vt: number): StageStatus
 export default function App() {
   const [run, setRun] = useState<RunArtifact | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('classes');
+  const [tab, setTab] = useState<Tab>('frontier');
   const [focus, setFocus] = useState<LayerId>('backtest');
   const [symbol, setSymbol] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
@@ -141,7 +142,7 @@ export default function App() {
         </div>
 
         <nav className="tabs">
-          {(['classes', 'portfolio', 'process', 'data'] as Tab[]).map((t) => (
+          {(['frontier', 'portfolio', 'classes', 'process', 'data'] as Tab[]).map((t) => (
             <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
               {t}
             </button>
@@ -160,6 +161,12 @@ export default function App() {
         </div>
       </header>
 
+      {tab === 'frontier' && (
+        <main className="page">
+          <FrontierView onImplement={() => setTab('portfolio')} />
+        </main>
+      )}
+
       {tab === 'classes' && (
         <main className="page">
           <ClassesView />
@@ -168,7 +175,7 @@ export default function App() {
 
       {tab === 'portfolio' && (
         <main className="page">
-          <PortfolioView />
+          <PortfolioView onBack={() => setTab('frontier')} />
         </main>
       )}
 

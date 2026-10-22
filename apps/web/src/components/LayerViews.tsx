@@ -383,9 +383,10 @@ export function BacktestView({ run }: { run: RunArtifact }) {
       <LineChart
         dates={bt.dates}
         series={[
-          { label: 'HRP core', values: bt.strategy, color: '#f97316', width: 2.2 },
-          { label: 'HRP + trend units', values: bt.strategyTrend, color: '#fbbf24', width: 1.4, dashed: true },
-          { label: '60/40', values: bt.sixtyForty, color: '#38bdf8', width: 1.4 },
+          { label: run.strategyLabel ?? 'Strategy', values: bt.strategy, color: '#f97316', width: 2.2 },
+          { label: `${run.strategyLabel ?? 'Strategy'} + trend units`, values: bt.strategyTrend, color: '#fbbf24', width: 1.4, dashed: true },
+          ...(Object.keys(bt.stats).some((k) => k.startsWith('60/40')) ? [{ label: '60/40', values: bt.sixtyForty, color: '#38bdf8', width: 1.4 }] : []),
+          { label: 'SPY', values: run.weekly.returns.SPY ?? [], color: '#94a3b8', width: 1.2 },
           { label: 'Equal weight', values: bt.equalWeight, color: '#a78bfa', width: 1.2, dashed: true },
         ]}
       />
@@ -405,7 +406,7 @@ export function BacktestView({ run }: { run: RunArtifact }) {
         <tbody>
           {rows.map(([k, v]) => (
             <tr key={k}>
-              <td className="mono">{k}</td>
+              <td className="mono">{k === 'HRP core' ? run.strategyLabel ?? k : k}</td>
               <td className="right mono pos">{pct(v.cagr)}</td>
               <td className="right mono">{pct(v.vol)}</td>
               <td className="right mono neg">{pct(v.maxDD)}</td>

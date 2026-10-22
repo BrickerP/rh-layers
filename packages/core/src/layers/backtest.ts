@@ -66,8 +66,10 @@ export function runBacktest(
   const cost = cfg.costBps / 1e4;
   const spy = clean.returns.SPY ?? new Array(n).fill(0);
   const idx = cfg.buildMode === 'momentum' ? priceIndex(clean, pool) : undefined;
-  const bondSym = clean.returns.AGG ? 'AGG' : 'IEF';
-  const bond = clean.returns[bondSym] ?? new Array(n).fill(0);
+  // Fail closed: if no aggregate/treasury series is in the panel, the 60/40 benchmark is omitted
+  // instead of silently treating the bond leg as zero return.
+  const bondSym = ['AGG', 'BND', 'IEF', 'VGIT', 'SPTI', 'TLT'].find((s) => clean.returns[s]);
+  const bond = bondSym ? clean.returns[bondSym] : null;
 
   let prev: Record<string, number> = {};
 
@@ -117,7 +119,7 @@ export function runBacktest(
     });
   }
 
-  const sixtyForty = dates.map((_, i) => 0.6 * (spy[i] ?? 0) + 0.4 * (bond[i] ?? 0));
+  const sixtyForty = bond ? dates.map((_, i) => 0.6 * (spy[i] ?? 0) + 0.4 * (bond[i] ?? 0)) : dates.map(() => 0);
   const active = strategy.map((v, i) => (i < cfg.windowWeeks ? 0 : v));
 
   const dd = (() => {
@@ -156,12 +158,13 @@ export function runBacktest(
   ];
 
   const stats: Record<string, PerfStats> = {
-    'HRP core': perf(active),
-    'HRP + trend units': perf(strategyTrend.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
-    '60/40': perf(sixtyForty),
-    'SPY buy & hold': perf(spy.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
-    'Equal weight': perf(equalWeight.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
-    'Inverse vol': perf(minVariance.map((v, i) => (i < cfg.windowWeeks ? 0 : v))),
+    // Annualise only over the walk-forward window; the warm-up weeks are not part of the record.
+    'HRP core': perf(active.slice(cfg.windowWeeks)),
+    'HRP + trend units': perf(strategyTrend.slice(cfg.windowWeeks)),
+    ...(bond ? { [`60/40 (SPY/${bondSym})`]: perf(sixtyForty.slice(cfg.windowWeeks)) } : {}),
+    'SPY buy & hold': perf(spy.slice(cfg.windowWeeks)),
+    'Equal weight': perf(equalWeight.slice(cfg.windowWeeks)),
+    'Inverse vol': perf(minVariance.slice(cfg.windowWeeks)),
   };
 
   const checks = [
@@ -172,13 +175,13 @@ export function runBacktest(
   ];
   const gate: Gate = { level: checks.filter((c) => !c.ok).length === 0 ? 'pass' : 'warn', checks };
   emit('backtest', 'gate', `backtest gate ${gate.level}`, { gate });
-  emit('backtest', 'progress', `HRP CAGR ${pct(stats['HRP core'].cagr)} · maxDD ${pct(stats['HRP core'].maxDD)} · 60/40 CAGR ${pct(stats['60/40'].cagr)}`, {
+  emit('backtest', 'progress', `strategy CAGR ${pct(stats['HRP core'].cagr)} · maxDD ${pct(stats['HRP core'].maxDD)} · SPY CAGR ${pct(stats['SPY buy & hold'].cagr)}`, {
     stats,
   });
 
   return {
     data: { dates, strategy: active, strategyTrend, sixtyForty, equalWeight, minVariance, drawdown: dd, stats, overlays: overlayStats, turnover },
     gate,
-    summary: `HRP ${pct(stats['HRP core'].cagr)} CAGR · ${pct(stats['HRP core'].maxDD)} maxDD`,
+    summary: `${pct(stats['HRP core'].cagr)} CAGR · ${pct(stats['HRP core'].maxDD)} maxDD`,
   };
 }

@@ -14,12 +14,29 @@ provenance  panel   risk     pool    states  cov+HRP  caps   walk-forward
 
 ```bash
 pnpm install
-pnpm run data       # 15y daily bars for the universe (public source)
-pnpm pipeline       # run the eight layers, writes runs/latest.json
+pnpm refresh        # extend sleeve history + re-estimate the frontier (data/sleeves → apps/web/public/frontier.json)
 pnpm dev            # http://localhost:5173
 ```
 
-The UI is class-first: Classes (quality table, hedge map, growth/balanced/defensive mixes), Portfolio (annual strategic sheet), Process (the eight-stage replay), Data (funnel, gates, sources). It replays a recorded event log and never calls market data at runtime.
+The default page is the **Frontier**: the estimated Pareto frontier for the digital-economy thesis
+(SPY, AI compute, memory & storage, power, model platforms, space, robotics, BTC, ETH, cash, gold),
+next to a walk-forward test of what following each rule actually delivered. **Portfolio** turns the
+selected point into tickers and share counts. **Classes** is a reference table of asset-class
+correlations and hedges. **Process** / **Data** replay the broad 8-layer research pipeline.
+
+### Frontier method
+
+- Weekly returns, annual rebalance, long-only, max 25% per risky sleeve (cash uncapped).
+- Drawdown is the risk axis. Max drawdown is path-dependent and not convex, so the frontier comes from a
+  deterministic candidate search (corners, pairs, sparse random mixes, mean-variance seeds, local refinement)
+  followed by non-dominated filtering.
+- Estimates use a 50% alpha haircut toward a CAPM prior (beta to SPY, cash as risk-free): each sleeve keeps
+  half of its historical excess over what its beta explains.
+- Walk-forward: from year 3 on, the frontier is re-estimated each year on past data only, the weights at each
+  drawdown target are held for 52 weeks, and the realised returns are chained.
+- The robust family holds a fixed basket (equal weight with or without gold, or the hand-set thesis mix)
+  and only estimates the cash share needed to stay within the drawdown target.
+- The sleeves themselves were chosen in 2026 with hindsight; the walk-forward tests the weighting rule, not the theme.
 
 ## Layers
 
@@ -47,39 +64,38 @@ The UI is class-first: Classes (quality table, hedge map, growth/balanced/defens
 
 - **Options** are modelled synthetically from realised volatility (covered call, protective put). They are reported separately and never enter the HRP solve.
 - **Event contracts** (Kalshi/Polymarket style) are binary and terminal, so they are ring-fenced as a capped sleeve and excluded from the covariance matrix. If the source is unreachable, the sleeve is **blocked with weight 0** — no fixture is substituted.
-- **Robinhood MCP** is an optional read-only adapter for positions and snapshots. Historical series come from public data. No order-placement tool is ever called.
 
 ## Data
 
-- **Universe discovery**: Eastmoney US market list — every US-listed stock/ETF (~13.9k) with market cap, volume and turnover, plus every USD crypto pair on Binance.
-- **Candidates**: top 400 liquid US stocks by market cap, top 120 ETFs by turnover, top 30 crypto pairs by 24h volume.
-- **History**: Eastmoney backward-adjusted daily bars (≈ total return) for stocks/ETFs; Binance daily klines for crypto. 10y+ where available.
-- **Scope**: 13,906 discovered → 550 candidates → 440 fetched → 129 in the covariance pool in the current run.
-- **Options** are modelled synthetically from realised volatility; they are reported separately and never enter the HRP solve.
-- **Event contracts** have no public history reachable from this environment, so the sleeve is blocked with weight 0 (fail-closed, no fixture).
-- Raw data stays in `data/raw/` (git-ignored); only the derived run artifact is committed.
+- `data/sleeves/` (committed): one file per vehicle. History seeded from Eastmoney backward-adjusted
+  closes (total return) where available, otherwise Nasdaq daily closes plus a constant distribution yield
+  (SMH, UFO, BOTZ, GLD, VST). Crypto from Binance. Each file records its basis.
+- Daily extension appends Nasdaq/Binance closes; appended days on total-return series accrue the yield.
+- Quotes used for share counts are real last prices, not adjusted levels.
+- The broad research pipeline (Process/Data) uses `data/raw/` (git-ignored) and is refreshed manually with
+  `pnpm refresh:pipeline`.
 
 ## Refresh
 
-- Local: `pnpm refresh` (discover → fetch → pipeline → sync).
-- Scheduled: `launchd` runs it daily at 07:00 (`ops/com.brickerp.rhlayers.daily.plist`).
-- Cloud: GitHub Actions runs the same refresh daily at 06:00 UTC and deploys Pages; if a source is unreachable, the committed artifact is used.
+- GitHub Actions runs daily at 22:30 UTC: `pnpm sleeves` (continue-on-error) → `pnpm frontier` → build → deploy.
+- Push builds deploy the committed `frontier.json` without fetching.
 
 ## Commands
 
 | command | purpose |
 |---|---|
-| `pnpm run data` | fetch raw bars |
-| `pnpm pipeline` | run the pipeline |
-| `pnpm dev` | dev UI |
-| `pnpm build` | typecheck + static build |
-| `pnpm -r typecheck` | typecheck all packages |
+| `pnpm refresh` | extend sleeve data and rebuild the frontier |
+| `pnpm sleeves` | fetch/extend sleeve vehicles only |
+| `pnpm frontier` | rebuild `frontier.json` from committed sleeves |
+| `pnpm classes` | rebuild the asset-class reference table |
+| `pnpm refresh:pipeline` | rerun the broad 8-layer pipeline (Process/Data) |
+| `pnpm dev` / `pnpm build` | dev server / typecheck + static build |
 
 ## Layout
 
 ```
 packages/core/src/layers/   one file per stage + math
-packages/cli/src/           data adapter + runner
+packages/cli/src/           sleeve fetch, frontier build, pipeline runner
 apps/web/src/               replay UI (flow graph, layer views, timeline)
 runs/                       run artifacts (git-ignored)
 ```

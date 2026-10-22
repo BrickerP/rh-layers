@@ -1,88 +1,62 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { FAMILIES, loadPick, pct, resolveRule, useFrontier, type Pick } from './FrontierView';
 
-interface Position {
-  symbol: string;
-  name: string;
-  cls: string;
-  weight: number;
-  price: number;
-  crypto: boolean;
-  live: boolean;
-}
-interface Portfolio {
-  asOf: string;
-  runId: string;
-  dataDate: string;
-  capitalDefault: number;
-  pricesLive: boolean;
-  classes: { cls: string; weight: number }[];
-  positions: Position[];
-  stats: { cagr: number; maxDD: number; sharpe: number; benchCagr: number; benchMaxDD: number; spyCagr?: number; spyMaxDD?: number };
-  rules: string[];
-  checklist: string[];
-}
-
-const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 const money = (x: number) => `$${Math.round(x).toLocaleString()}`;
 
-export default function PortfolioView() {
-  const [data, setData] = useState<Portfolio | null>(null);
+export default function PortfolioView({ onBack }: { onBack: () => void }) {
+  const data = useFrontier();
   const [capital, setCapital] = useState(100000);
-  const [err, setErr] = useState<string | null>(null);
+  const [pick, setPick] = useState<Pick | null>(null);
 
   useEffect(() => {
     const saved = Number(localStorage.getItem('rh-layers-capital'));
     if (saved > 0) setCapital(saved);
-    fetch(`${import.meta.env.BASE_URL}portfolio.json`)
-      .then((r) => {
-        if (!r.ok) throw new Error('portfolio.json missing — run pnpm portfolio');
-        return r.json() as Promise<Portfolio>;
-      })
-      .then((p) => {
-        setData(p);
-        if (!saved) setCapital(p.capitalDefault);
-      })
-      .catch((e: Error) => setErr(e.message));
   }, []);
+  useEffect(() => {
+    if (data) setPick(loadPick(data));
+  }, [data]);
 
   const rows = useMemo(() => {
-    if (!data) return [];
-    return data.positions.map((p) => {
-      const amount = p.weight * capital;
-      const rawShares = p.price > 0 ? amount / p.price : 0;
-      const shares = p.crypto ? Math.floor(rawShares * 10000) / 10000 : Math.floor(rawShares);
-      const spent = shares * p.price;
-      return { ...p, amount, shares, spent, leftover: amount - spent };
+    if (!data || !pick) return [];
+    const rule = resolveRule(data, pick);
+    const out: { symbol: string; sleeve: string; color: string; weight: number; price: number; crypto: boolean; amount: number; shares: number; spent: number }[] = [];
+    rule.w.forEach((w, i) => {
+      if (w <= 0.0005) return;
+      const s = data.sleeves[i];
+      for (const m of s.members) {
+        const weight = w / s.members.length;
+        const price = data.vehicles[m]?.price ?? 0;
+        const crypto = m.endsWith('-USD');
+        const amount = weight * capital;
+        const raw = price > 0 ? amount / price : 0;
+        const shares = crypto ? Math.floor(raw * 10000) / 10000 : Math.floor(raw);
+        out.push({ symbol: m, sleeve: s.label, color: s.color, weight, price, crypto, amount, shares, spent: shares * price });
+      }
     });
-  }, [data, capital]);
+    return out.sort((a, b) => b.weight - a.weight);
+  }, [data, pick, capital]);
 
-  if (err || !data) {
-    return (
-      <div className="empty">
-        <div className="empty-card">
-          <div className="kicker">RH LAYERS</div>
-          <h1>Portfolio sheet not generated</h1>
-          <p>
-            Run <code>pnpm portfolio</code> to build it from the latest run.
-          </p>
-          {err && <div className="callout warn">{err}</div>}
-        </div>
-      </div>
-    );
-  }
-
+  if (!data || !pick) return <div className="empty"><div className="empty-card"><h1>Loading portfolio…</h1></div></div>;
+  const rule = resolveRule(data, pick);
+  const family = FAMILIES.find((f) => f.id === pick.family)!;
+  const spy = data.benchmarks.find((b) => b.id === 'SPY')!;
   const invested = rows.reduce((a, r) => a + r.spent, 0);
-  const leftover = capital - invested;
+  const quoteDate = Object.values(data.vehicles)
+    .map((v) => v.asOf)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
 
   return (
     <div className="sheet">
       <div className="sheet-head">
         <div>
-          <div className="kicker">implementation portfolio · {data.positions.length} positions</div>
-          <h1>One portfolio, one page</h1>
+          <div className="kicker">
+            implementation · {family.label} · drawdown target ≤ {pct(rule.target, 0)}
+          </div>
+          <h1>{rule.title}</h1>
           <p>
-            Built from the {data.dataDate} run · prices as of {data.asOf}
-            {data.pricesLive ? ' (live)' : ' (last known; refresh before trading)'}
+            {family.note}. Prices as of {quoteDate}. <button className="linklike" onClick={onBack}>change point on the frontier</button>
           </p>
         </div>
         <div className="sheet-controls">
@@ -108,119 +82,79 @@ export default function PortfolioView() {
 
       <div className="kpis">
         <div className="kpi">
-          <span>backtest CAGR</span>
-          <b className="pos">{pct(data.stats.cagr)}</b>
-          <i>SPY: {pct(data.stats.spyCagr ?? 0)}</i>
+          <span>walk-forward CAGR</span>
+          <b className="pos">{pct(rule.oos.cagr)}</b>
+          <i>
+            {data.oosWindow.start} → {data.oosWindow.end}
+          </i>
         </div>
         <div className="kpi">
-          <span>max drawdown</span>
-          <b className="neg">{pct(data.stats.maxDD)}</b>
-          <i>60/40: {pct(data.stats.benchMaxDD)}</i>
+          <span>walk-forward max drawdown</span>
+          <b className="neg">{pct(rule.oos.maxDD)}</b>
+          <i>estimated {pct(rule.is.maxDD)}</i>
         </div>
         <div className="kpi">
-          <span>Sharpe</span>
-          <b>{data.stats.sharpe.toFixed(2)}</b>
-          <i>walk-forward, net of 10bp costs</i>
+          <span>SPY, same weeks</span>
+          <b>{pct(spy.oos.cagr)}</b>
+          <i>drawdown {pct(spy.oos.maxDD)}</i>
         </div>
         <div className="kpi">
           <span>capital</span>
           <b>{money(capital)}</b>
           <i>
-            invested {money(invested)} · cash {money(leftover)}
+            invested {money(invested)} · rounding cash {money(capital - invested)}
           </i>
         </div>
       </div>
 
-      <div className="sheet-grid">
-        <section className="panel">
-          <div className="panel-head">
-            <h3>Target portfolio</h3>
-            <span className="dim">strategic class mix · annual rebalance · shares rounded down</span>
-          </div>
-          <table className="table sheet-table">
-            <thead>
-              <tr>
-                <th>symbol</th>
-                <th>name</th>
-                <th>class</th>
-                <th className="right">target</th>
-                <th className="right">amount</th>
-                <th className="right">price</th>
-                <th className="right">shares</th>
+      <section className="panel">
+        <div className="panel-head">
+          <h3>Orders to place</h3>
+          <span className="dim">sleeve weight split equally across its tickers · ETFs/stocks rounded down, crypto fractional</span>
+        </div>
+        <table className="table sheet-table">
+          <thead>
+            <tr>
+              <th>ticker</th>
+              <th>sleeve</th>
+              <th className="right">target</th>
+              <th className="right">amount</th>
+              <th className="right">price</th>
+              <th className="right">shares</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.symbol}>
+                <td className="mono strong">
+                  <i className="swatch" style={{ background: r.color }} />
+                  {r.symbol}
+                </td>
+                <td className="dim">{r.sleeve}</td>
+                <td className="right mono">{pct(r.weight)}</td>
+                <td className="right mono">{money(r.amount)}</td>
+                <td className="right mono">{r.price > 0 ? r.price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : '—'}</td>
+                <td className="right mono strong">{r.shares.toLocaleString(undefined, { maximumFractionDigits: r.crypto ? 4 : 0 })}</td>
               </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.symbol}>
-                  <td className="mono strong">{r.symbol}</td>
-                  <td className="dim">{r.name}</td>
-                  <td className="dim">{r.cls}</td>
-                  <td className="right mono">{pct(r.weight)}</td>
-                  <td className="right mono">{money(r.amount)}</td>
-                  <td className="right mono">{r.price > 0 ? r.price.toFixed(2) : '—'}</td>
-                  <td className="right mono strong">
-                    {r.shares.toLocaleString(undefined, { maximumFractionDigits: r.crypto ? 4 : 0 })}
-                  </td>
-                </tr>
-              ))}
-              <tr className="total-row">
-                <td colSpan={3}>total</td>
-                <td className="right mono">100.0%</td>
-                <td className="right mono">{money(invested)}</td>
-                <td />
-                <td className="right mono">cash {money(leftover)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p className="note">
-            ETFs are rounded to whole shares; crypto is fractional. The leftover is the rounding cash. This is a planning sheet, not an
-            order ticket — prices move between generation and execution.
-          </p>
-        </section>
-
-        <section className="panel">
-          <div className="panel-head">
-            <h3>Allocation</h3>
-            <span className="dim">class weights</span>
-          </div>
-          <div className="class-bars big">
-            {data.classes.map((c) => (
-              <div key={c.cls} className="class-row">
-                <span>{c.cls}</span>
-                <div className="bar">
-                  <i style={{ width: `${(c.weight / Math.max(...data.classes.map((x) => x.weight), 0.01)) * 100}%` }} />
-                </div>
-                <b>{pct(c.weight)}</b>
-              </div>
             ))}
-          </div>
-
-          <h4 className="h4 spaced">rules</h4>
-          <ul className="rules">
-            {data.rules.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        </section>
-      </div>
+          </tbody>
+        </table>
+      </section>
 
       <section className="panel">
         <div className="panel-head">
-          <h3>Semi-annual rebalance checklist</h3>
-          <span className="dim">run this twice a year, or when a class drifts &gt; 5pp</span>
+          <h3>Rules</h3>
+          <span className="dim">annual cadence</span>
         </div>
         <ol className="checklist">
-          {data.checklist.map((c) => (
-            <li key={c}>{c}</li>
-          ))}
+          <li>{pick.family === 'opt' ? 'Weights come from the frontier re-estimated once a year on all data to date.' : 'The basket weights are fixed. Only the cash share is re-estimated once a year from all data to date.'}</li>
+          <li>Rebalance once a year back to these weights; in between, only act if the drawdown target is breached by more than 5 points.</li>
+          <li>Put new money into whatever is furthest below target before selling anything.</li>
+          <li>Use limit orders; avoid the first and last 15 minutes of the session.</li>
+          <li>The expectation is the walk-forward number, not the estimate. The theme itself can stop working; that risk is not in these numbers.</li>
+          <li>Planning sheet only — no orders are placed and prices move between generation and execution.</li>
         </ol>
       </section>
-
-      <div className="sheet-foot">
-        <span>run {data.runId}</span>
-        <span>prices {data.pricesLive ? 'live' : 'last known'} · data {data.dataDate}</span>
-        <span>not investment advice · no orders placed</span>
-      </div>
     </div>
   );
 }

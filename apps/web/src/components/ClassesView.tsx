@@ -14,19 +14,9 @@ interface ClassRow {
   corrGold: number;
   stress: number;
 }
-interface Mix {
-  name: string;
-  weights: Record<string, number>;
-  cagr: number;
-  vol: number;
-  maxDD: number;
-  sharpe: number;
-}
 interface Classes {
   period: string;
   classes: ClassRow[];
-  mixes: Mix[];
-  frontier: { spy: number; gld: number; cagr: number; vol: number; maxDD: number; sharpe: number }[];
   hedges: {
     equity: { symbol: string; corr: number; stress: number }[];
     rates: { symbol: string; corr: number }[];
@@ -38,7 +28,6 @@ const pct = (x: number, d = 1) => `${(x * 100).toFixed(d)}%`;
 
 export default function ClassesView() {
   const [data, setData] = useState<Classes | null>(null);
-  const [mix, setMix] = useState('Balanced');
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}classes.json`)
@@ -49,58 +38,19 @@ export default function ClassesView() {
 
   if (!data) return <div className="empty"><div className="empty-card"><h1>classes.json missing</h1></div></div>;
 
-  const selected = data.mixes.find((m) => m.name === mix) ?? data.mixes[0];
   const byName = new Map(data.classes.map((c) => [c.symbol, c]));
 
   return (
     <div className="classes">
       <div className="sheet-head">
         <div>
-          <div className="kicker">asset classes · hedge structure · annual rebalance</div>
+          <div className="kicker">reference · asset classes and what hedges what</div>
           <h1>What to own, and what hedges what</h1>
-          <p>{data.period} · 17 liquid asset classes · no stock picking, no daily signals</p>
+          <p>{data.period} · 17 liquid asset classes · weekly data, USD</p>
         </div>
       </div>
 
-      <div className="mix-cards">
-        {data.mixes.map((m) => (
-          <button key={m.name} className={`mix-card ${m.name === mix ? 'on' : ''}`} onClick={() => setMix(m.name)}>
-            <span className="mix-name">{m.name}</span>
-            <b className="pos">{pct(m.cagr)}</b>
-            <span className="mix-meta">
-              DD {pct(m.maxDD)} · Sharpe {m.sharpe.toFixed(2)}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      <div className="result-grid">
-        <section className="panel">
-          <div className="panel-head">
-            <h3>{selected.name} mix</h3>
-            <span className="dim">annual rebalance · strategic weights</span>
-          </div>
-          <div className="wlist">
-            {Object.entries(selected.weights)
-              .sort((a, b) => b[1] - a[1])
-              .map(([s, w]) => (
-                <div key={s} className="wrow static">
-                  <span className="mono">{s}</span>
-                  <span className="wbar">
-                    <i style={{ width: `${(w / Math.max(...Object.values(selected.weights))) * 100}%` }} />
-                  </span>
-                  <b>{pct(w)}</b>
-                </div>
-              ))}
-          </div>
-          <div className="notes">
-            <span>CAGR {pct(selected.cagr)}</span>
-            <span>vol {pct(selected.vol)}</span>
-            <span>max DD {pct(selected.maxDD)}</span>
-            <span>Sharpe {selected.sharpe.toFixed(2)}</span>
-          </div>
-        </section>
-
+      <div className="hedges-wrap">
         <section className="panel">
           <div className="panel-head">
             <h3>Hedges</h3>
@@ -143,35 +93,6 @@ export default function ClassesView() {
           </div>
         </section>
       </div>
-
-      <section className="panel">
-        <div className="panel-head">
-          <h3>What actually earned its place</h3>
-          <span className="dim">SPY + gold barbell vs the 17-class mix</span>
-        </div>
-        <div className="frontier">
-          {data.frontier.map((f) => (
-            <div key={f.spy} className={`frontier-row ${f.spy === 0.6 ? 'best' : ''}`}>
-              <span className="mono">
-                SPY {Math.round(f.spy * 100)} / GLD {Math.round(f.gld * 100)}
-              </span>
-              <div className="bar">
-                <i style={{ width: `${(f.sharpe / Math.max(...data.frontier.map((x) => x.sharpe))) * 100}%` }} />
-              </div>
-              <b>{pct(f.cagr)}</b>
-              <span className={f.maxDD > -25 ? 'pos' : 'neg'}>{pct(f.maxDD)}</span>
-              <span className="mono">{f.sharpe.toFixed(2)}</span>
-            </div>
-          ))}
-        </div>
-        <p className="note">
-          Same window. The 17-class Balanced mix delivers {pct(selected.name === 'Balanced' ? selected.cagr : 0.099)} /{' '}
-          {pct(selected.name === 'Balanced' ? selected.maxDD : -0.211)} / Sharpe{' '}
-          {(selected.name === 'Balanced' ? selected.sharpe : 0.94).toFixed(2)} — dominated by a 60/40 SPY/gold barbell
-          (15.3% / −22.8% / 1.18) and even by 50/50. That is the uncomfortable answer: most diversifiers did not earn their
-          weight in this window.
-        </p>
-      </section>
 
       <section className="panel">
         <div className="panel-head">
