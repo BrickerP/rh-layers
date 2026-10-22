@@ -26,6 +26,7 @@ interface Classes {
   period: string;
   classes: ClassRow[];
   mixes: Mix[];
+  frontier: { spy: number; gld: number; cagr: number; vol: number; maxDD: number; sharpe: number }[];
   hedges: {
     equity: { symbol: string; corr: number; stress: number }[];
     rates: { symbol: string; corr: number }[];
@@ -142,6 +143,35 @@ export default function ClassesView() {
           </div>
         </section>
       </div>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h3>What actually earned its place</h3>
+          <span className="dim">SPY + gold barbell vs the 17-class mix</span>
+        </div>
+        <div className="frontier">
+          {data.frontier.map((f) => (
+            <div key={f.spy} className={`frontier-row ${f.spy === 0.6 ? 'best' : ''}`}>
+              <span className="mono">
+                SPY {Math.round(f.spy * 100)} / GLD {Math.round(f.gld * 100)}
+              </span>
+              <div className="bar">
+                <i style={{ width: `${(f.sharpe / Math.max(...data.frontier.map((x) => x.sharpe))) * 100}%` }} />
+              </div>
+              <b>{pct(f.cagr)}</b>
+              <span className={f.maxDD > -25 ? 'pos' : 'neg'}>{pct(f.maxDD)}</span>
+              <span className="mono">{f.sharpe.toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+        <p className="note">
+          Same window. The 17-class Balanced mix delivers {pct(selected.name === 'Balanced' ? selected.cagr : 0.099)} /{' '}
+          {pct(selected.name === 'Balanced' ? selected.maxDD : -0.211)} / Sharpe{' '}
+          {(selected.name === 'Balanced' ? selected.sharpe : 0.94).toFixed(2)} — dominated by a 60/40 SPY/gold barbell
+          (15.3% / −22.8% / 1.18) and even by 50/50. That is the uncomfortable answer: most diversifiers did not earn their
+          weight in this window.
+        </p>
+      </section>
 
       <section className="panel">
         <div className="panel-head">

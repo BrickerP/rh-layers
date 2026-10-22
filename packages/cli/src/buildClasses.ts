@@ -188,9 +188,18 @@ async function main() {
   const balanced = MIXES.Balanced;
   const balStats = mixes.find((m) => m.name === 'Balanced')!;
 
+  // Two-asset barbell: the simplest thing that can beat the 17-class mix.
+  const frontier = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0].map((w) => {
+    const r = new Array(n).fill(0);
+    for (let i = 0; i < n; i++) r[i] = w * (returns.SPY[i] ?? 0) + (1 - w) * (returns.GLD[i] ?? 0);
+    const st = stats(r, spy);
+    return { spy: w, gld: 1 - w, cagr: st.cagr, vol: st.vol, maxDD: maxDrawdown(r), sharpe: st.sharpe };
+  });
+
   const out = {
     asOf: new Date().toISOString().slice(0, 10),
     mixes,
+    frontier,
     period: `${dates[0]} → ${dates.at(-1)}`,
     classes: rows,
     matrix: { names, cells: matrix },

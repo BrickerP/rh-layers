@@ -1597,3 +1597,39 @@ button {
 .wrow.static {
   cursor: default;
 }
+.frontier {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.frontier-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 62px 62px 42px;
+  gap: 10px;
+  align-items: center;
+  font-size: 10px;
+  color: var(--dim);
+}
+.frontier-row .bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.frontier-row .bar i {
+  display: block;
+  height: 100%;
+  background: rgba(45, 212, 191, 0.55);
+}
+.frontier-row b,
+.frontier-row span:last-child {
+  font-family: var(--mono);
+  text-align: right;
+  color: var(--text);
+}
+.frontier-row.best {
+  color: var(--text);
+}
+.frontier-row.best .bar i {
+  background: var(--accent);
+}
